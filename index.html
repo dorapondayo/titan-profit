@@ -439,7 +439,7 @@ async function testAPI(){
   try{
     const resp=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model,messages:[{role:'user',content:'Reply OK'}],max_tokens:10})
+      body:JSON.stringify({model,messages:[{role:'user',content:'Reply OK'}],max_completion_tokens:10})
     });
     const data=await resp.json();
     if(data.error){el.innerHTML=`<span class="red">エラー: ${data.error.message}</span>`;return}
@@ -476,7 +476,7 @@ JSONのみ。`;
   try{
     const resp=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_tokens:600})
+      body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_completion_tokens:600})
     });
     const data=await resp.json();
     if(data.error){lastAPIError=data.error.message;console.error('API:',data.error);return null}
