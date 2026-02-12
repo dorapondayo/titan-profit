@@ -478,49 +478,57 @@ function matchGpu(gpuName){
 }
 
 // ================================================================
-// Option cost calculation
+// Option cost calculation (with missing detection)
 // ================================================================
 function calcOptionCost(optionStr){
-  if(!optionStr)return 0;
-  let total=0;
+  if(!optionStr)return {cost:0,miss:[]};
+  let total=0;const miss=[];
   const items=optionStr.split(/[,、，]/);
   for(let item of items){
     item=item.trim();if(!item)continue;
-    for(const[k,v]of Object.entries(optPrices.other||{})){
-      if(item.toLowerCase().includes(k.toLowerCase())){total+=v;break}
+    let found=false;
+    const sortedKeys=Object.keys(optPrices.other||{}).sort((a,b)=>b.length-a.length);
+    for(const k of sortedKeys){
+      if(item.toLowerCase().includes(k.toLowerCase())){total+=optPrices.other[k];found=true;break}
     }
+    if(!found)miss.push({cat:'option',name:item,note:'オプションテーブルに未登録'});
   }
-  return total;
+  return {cost:total,miss};
 }
 
 function getCpuCost(cpuName,baseCost){
-  if(!cpuName)return baseCost;
+  if(!cpuName)return {cost:baseCost,matched:true};
   const n=cpuName.toUpperCase().replace(/RYZEN\s*(7|9|5)\s*/i,'').replace(/CORE\s*I\d\s*/i,'').trim();
-  // Sort by key length descending (7700X before 7700)
   const keys=Object.keys(optPrices.cpu||{}).sort((a,b)=>b.length-a.length);
   for(const k of keys){
-    if(n.includes(k.toUpperCase()))return optPrices.cpu[k];
+    if(n.includes(k.toUpperCase()))return {cost:optPrices.cpu[k],matched:true};
   }
-  return baseCost;
+  return {cost:baseCost,matched:false};
 }
 
 function getRamCost(ramStr,baseCost){
-  if(!ramStr)return baseCost;
+  if(!ramStr)return {cost:baseCost,matched:true};
   const n=ramStr.toUpperCase().replace(/\s+/g,' ').trim();
   const is5=n.includes('DDR5');
-  if(n.includes('64'))return optPrices.ram?.['DDR5 64GB']||baseCost;
-  if(n.includes('32'))return is5?(optPrices.ram?.['DDR5 32GB']||baseCost):(optPrices.ram?.['DDR4 32GB']||baseCost);
-  if(n.includes('16'))return is5?(optPrices.ram?.['DDR5 16GB']||baseCost):(optPrices.ram?.['DDR4 16GB']||baseCost);
-  return baseCost;
+  if(n.includes('64')&&optPrices.ram?.['DDR5 64GB']!=null)return {cost:optPrices.ram['DDR5 64GB'],matched:true};
+  if(n.includes('32')){
+    const key=is5?'DDR5 32GB':'DDR4 32GB';
+    if(optPrices.ram?.[key]!=null)return {cost:optPrices.ram[key],matched:true};
+  }
+  if(n.includes('16')){
+    const key=is5?'DDR5 16GB':'DDR4 16GB';
+    if(optPrices.ram?.[key]!=null)return {cost:optPrices.ram[key],matched:true};
+  }
+  return {cost:baseCost,matched:false};
 }
 
 function getSsdCost(ssdStr,baseCost){
-  if(!ssdStr)return baseCost;
+  if(!ssdStr)return {cost:baseCost,matched:true};
   const n=ssdStr.toUpperCase();
-  if(n.includes('2TB'))return optPrices.ssd?.['2TB']||baseCost;
-  if(n.includes('1TB'))return optPrices.ssd?.['1TB']||baseCost;
-  if(n.includes('512'))return optPrices.ssd?.['512GB']||baseCost;
-  return baseCost;
+  if(n.includes('2TB')&&optPrices.ssd?.['2TB']!=null)return {cost:optPrices.ssd['2TB'],matched:true};
+  if(n.includes('1TB')&&optPrices.ssd?.['1TB']!=null)return {cost:optPrices.ssd['1TB'],matched:true};
+  if(n.includes('512')&&optPrices.ssd?.['512GB']!=null)return {cost:optPrices.ssd['512GB'],matched:true};
+  return {cost:baseCost,matched:false};
 }
 
 // ================================================================
@@ -529,23 +537,36 @@ function getSsdCost(ssdStr,baseCost){
 function calcCosts(parts,gpuKey){
   const base=gpuKey?gpuTable[gpuKey]:null;
   const costs={};
+  const missing=[];
 
   if(base){
     costs.gpu=base.gpu;
-    costs.cpu=getCpuCost(parts.cpu,base.cpu);
-    costs.mb=base.mb; // A520固定
-    costs.ram=getRamCost(parts.ram,base.ram);
-    costs.ssd=getSsdCost(parts.ssd,base.ssd);
+
+    const cpuR=getCpuCost(parts.cpu,base.cpu);
+    costs.cpu=cpuR.cost;
+    if(!cpuR.matched&&parts.cpu)missing.push({cat:'cpu',name:parts.cpu,note:'CPUテーブルに未登録'});
+
+    costs.mb=base.mb;
+
+    const ramR=getRamCost(parts.ram,base.ram);
+    costs.ram=ramR.cost;
+    if(!ramR.matched&&parts.ram)missing.push({cat:'ram',name:parts.ram,note:'RAMテーブルに未登録'});
+
+    const ssdR=getSsdCost(parts.ssd,base.ssd);
+    costs.ssd=ssdR.cost;
+    if(!ssdR.matched&&parts.ssd)missing.push({cat:'ssd',name:parts.ssd,note:'SSDテーブルに未登録'});
+
     costs.cas=base.cas;
     costs.psu=base.psu;
     costs.cool=base.cool;
   } else {
-    // GPU not in table - all unknown
     costs.gpu=0;costs.cpu=0;costs.mb=4000;costs.ram=8000;costs.ssd=7000;costs.cas=7000;costs.psu=0;costs.cool=300;
+    if(parts.gpu)missing.push({cat:'gpu',name:parts.gpu,note:'GPUテーブルに未登録'});
   }
 
-  // Options (水冷,WiFi etc)
-  costs.option=calcOptionCost(parts.option);
+  const optR=calcOptionCost(parts.option);
+  costs.option=optR.cost;
+  missing.push(...optR.miss);
 
   // Peripherals
   if(parts.monitor){
@@ -554,7 +575,7 @@ function calcCosts(parts,gpuKey){
   }else{costs.monitor=0}
   costs.keyboard=(parts.keyboard)?fixedPrices.keyboard+fixedPrices.mouse:0;
 
-  return costs;
+  return {costs,missing};
 }
 
 function totalCost(costs){
@@ -839,12 +860,9 @@ async function startAI(){
 
     if(parts){
       gpuKey=parts.gpu_key?matchGpu(parts.gpu_key):matchGpu(parts.gpu);
-      costs=calcCosts(parts,gpuKey);
-
-      // If GPU not matched, add to missing
-      if(!gpuKey&&parts.gpu){
-        missing.push({cat:'gpu',name:parts.gpu,note:'GPUテーブルに未登録'});
-      }
+      const result=calcCosts(parts,gpuKey);
+      costs=result.costs;
+      missing=result.missing;
     }
 
     newSales.push({
@@ -864,7 +882,7 @@ async function startAI(){
   $('b2').textContent=mc;
   $('aiSt').innerHTML=`<h4>${newSales.length}件の解析完了</h4>`
     +(errCnt>0?`<p class="red" style="font-weight:700">⚠ ${errCnt}件でAPI解析失敗</p>`:'')
-    +(mc>0?`<p>${mc}件の未登録GPUあり</p>`:'<p class="grn">全GPUマッチ済み</p>');
+    +(mc>0?`<p class="ylw" style="font-weight:700">⚠ ${mc}件の未登録パーツあり → 不足パーツタブで原価を入力してください</p>`:'<p class="grn">全パーツマッチ済み</p>');
 
   if(errCnt>0){
     const fe=newSales.find(s=>s.parseError);
@@ -883,7 +901,7 @@ async function startAI(){
       <div class="sr-nm-s">${hasErr?'<span class="red">解析失敗</span>':gpu+' / '+cpu+' / GPU: '+gk}</div></div>
       <div class="sr-n"><div><div class="sr-nl">売値</div><div class="sr-nv">¥${(s.sale_price||0).toLocaleString()}</div></div>
       <div><div class="sr-nl">原価</div><div class="sr-nv">¥${totalCost(s.costs).toLocaleString()}</div></div>
-      ${hasErr?'<span class="tag tag-m">エラー</span>':hm?'<span class="tag tag-m">GPU未登録</span>':'<span class="tag tag-g">OK</span>'}</div></div></div>`;
+      ${hasErr?'<span class="tag tag-m">エラー</span>':hm?'<span class="tag tag-m">未登録'+s.missing.length+'件</span>':'<span class="tag tag-g">OK</span>'}</div></div></div>`;
   });
   $('aiList').innerHTML=html;
 }
@@ -892,20 +910,88 @@ async function startAI(){
 // Missing Parts (GPU未登録)
 // ================================================================
 function renderMissing(){
-  const miss=sales.filter(s=>(s.missing||[]).length>0);
-  $('b2').textContent=miss.length;
-  if(!miss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録GPUなし</h4></div>';return}
-  let html='';
-  miss.forEach(s=>{
-    html+=`<div class="cd"><div class="cd-t">${esc(s.product_name)}</div>`;
-    s.missing.forEach(m=>{
-      html+=`<div class="row mb12"><div><label>${m.cat}: ${esc(m.name)}</label><p style="font-size:11px;color:#888">${m.note||''}</p></div></div>`;
+  // Collect all unique missing parts across all sales
+  const allMiss=[];
+  const seen=new Set();
+  sales.forEach(s=>{
+    (s.missing||[]).forEach(m=>{
+      const key=m.cat+':'+m.name;
+      if(!seen.has(key)){seen.add(key);allMiss.push({...m,key})}
     });
-    html+=`</div>`;
   });
+  $('b2').textContent=allMiss.length;
+  if(!allMiss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録パーツなし — すべてテーブルにマッチ済み</h4></div>';return}
+
+  const catLabels={gpu:'GPU',cpu:'CPU',ram:'RAM',ssd:'SSD',option:'オプション'};
+  let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「テーブルに追加して再計算」を押してください</p></div>';
+  allMiss.forEach((m,i)=>{
+    html+=`<div class="cd" style="padding:14px 20px">
+      <div class="row fx-c">
+        <div style="flex:2"><span class="tag tag-m">${catLabels[m.cat]||m.cat}</span> <strong>${esc(m.name)}</strong> <span style="font-size:11px;color:#888">${m.note||''}</span></div>
+        <div style="flex:1"><label>原価 ¥</label><input type="number" id="missP_${i}" placeholder="原価を入力" style="font-size:14px;padding:8px"></div>
+      </div>
+    </div>`;
+  });
+  html+=`<div id="missData" style="display:none">${JSON.stringify(allMiss)}</div>`;
   $('missWrap').innerHTML=html;
 }
-function applyMissing(){saveS()}
+
+function applyMissing(){
+  const dataEl=$('missData');
+  if(!dataEl)return;
+  const allMiss=JSON.parse(dataEl.textContent);
+  let added=0;
+
+  allMiss.forEach((m,i)=>{
+    const priceEl=$('missP_'+i);
+    if(!priceEl)return;
+    const price=parseInt(priceEl.value);
+    if(isNaN(price))return;
+
+    // Add to the correct table
+    if(m.cat==='cpu'){
+      // Extract short name (e.g., "5900X" from "Ryzen 9 5900X")
+      let short=m.name.replace(/ryzen\s*(7|9|5)\s*/i,'').replace(/core\s*i\d\s*/i,'').trim();
+      if(!short)short=m.name;
+      optPrices.cpu[short]=price;
+      added++;
+    } else if(m.cat==='ram'){
+      optPrices.ram[m.name]=price;
+      added++;
+    } else if(m.cat==='ssd'){
+      // Normalize (e.g., "2TB (Dドライブ) + 1TB" → just add as-is)
+      optPrices.ssd[m.name]=price;
+      added++;
+    } else if(m.cat==='option'){
+      optPrices.other[m.name]=price;
+      added++;
+    } else if(m.cat==='gpu'){
+      // Add new GPU row with default values
+      gpuTable[m.name]={gpu:price,cpu:3500,mb:4000,ram:8000,ssd:7000,cas:7000,psu:700,cool:300};
+      added++;
+    }
+  });
+
+  if(added>0){
+    // Save tables
+    localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));
+    localStorage.setItem(LS_OPT,JSON.stringify(optPrices));
+    renderGpuTable();renderAllPartTables();
+
+    // Recalculate all sales
+    sales.forEach(s=>{
+      if(!s.parts||!Object.keys(s.parts).length)return;
+      const gpuKey=s.parts.gpu_key?matchGpu(s.parts.gpu_key):matchGpu(s.parts.gpu);
+      const result=calcCosts(s.parts,gpuKey);
+      s.gpuKey=gpuKey;
+      s.costs=result.costs;
+      s.missing=result.missing;
+    });
+    saveS();
+  }
+
+  go(3);
+}
 
 // ================================================================
 // Sales Rendering
@@ -948,10 +1034,13 @@ function renderSales(){
       </div>
       <div class="sr-d" style="display:none">
         <div class="pg">`;
+    const missCats=new Set((s.missing||[]).map(m=>m.cat));
     costParts.forEach(([label,name,cost])=>{
-      html+=`<div class="pc"><div class="pc-l">${label}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><div class="mono" style="font-size:11px">¥${(cost||0).toLocaleString()}</div></div>`;
+      const isMiss=(label==='GPU'&&missCats.has('gpu'))||(label==='CPU'&&missCats.has('cpu'))||(label==='RAM'&&missCats.has('ram'))||(label==='SSD'&&missCats.has('ssd'))||(label==='オプション'&&missCats.has('option'));
+      html+=`<div class="pc${isMiss?' miss':''}"><div class="pc-l">${label}${isMiss?' <span class="red">⚠未登録</span>':''}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><div class="mono" style="font-size:11px">¥${(cost||0).toLocaleString()}</div></div>`;
     });
     html+=`</div>
+        ${(s.missing||[]).length>0?`<div class="al al-w mt8"><h4>未登録パーツ ${s.missing.length}件</h4><p>${s.missing.map(m=>m.name).join(', ')} → 不足パーツタブで原価入力</p></div>`:''}
         <div class="mt8" style="font-size:11px;color:#888">手数料: ¥${p.fee.toLocaleString()} / 送料: ¥${s.shipping.toLocaleString()} / 消費税: ¥${p.tax.toLocaleString()}</div>
         <details class="mt8"><summary style="font-size:11px;color:#888;cursor:pointer">説明文</summary><pre style="font-size:10px;color:#666;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:6px">${esc((s.description||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,''))}</pre></details>
         <div class="mt8"><button class="btn btn-d" style="padding:4px 12px;font-size:11px" onclick="sales.splice(${idx},1);saveS();renderSales()">削除</button></div>
@@ -959,7 +1048,12 @@ function renderSales(){
     </div>`;
   });
 
-  $('salesList').innerHTML=html;
+  // Global missing count
+  const globalMiss=sales.reduce((s,x)=>(x.missing||[]).length+s,0);
+  $('b2').textContent=globalMiss;
+  let missHtml=globalMiss>0?`<div class="al al-w mb16"><h4>未登録パーツ ${globalMiss}件</h4><p>不足パーツタブで原価を入力して再計算してください。未登録パーツの原価はベース値のまま計算されています。</p></div>`:'';
+
+  $('salesList').innerHTML=missHtml+html;
   $('s1').textContent='¥'+totalSale.toLocaleString();
   $('s2').textContent='¥'+totalProfit.toLocaleString();
   $('s3').textContent=cnt>0?((totalProfit/totalSale*100).toFixed(1)+'%'):'0%';
