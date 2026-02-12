@@ -10,62 +10,40 @@
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'IBM Plex Sans JP','Hiragino Kaku Gothic ProN',sans-serif;background:#f5f5f0;color:#1a1a1a;font-size:14px;line-height:1.6}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#eee}::-webkit-scrollbar-thumb{background:#bbb;border-radius:3px}
-
-/* ── Header ── */
 .hdr{background:#fff;border-bottom:2px solid #1a1a1a;padding:12px 24px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100}
 .hdr-mark{font-size:22px;font-weight:800;letter-spacing:.06em;font-family:'IBM Plex Mono',monospace}
 .hdr-sub{font-size:11px;color:#888;margin-top:1px;letter-spacing:.02em}
-
-/* ── Layout ── */
 .wrap{max-width:1040px;margin:0 auto;padding:20px 16px 80px}
-
-/* ── Tabs ── */
 .tabs{display:flex;gap:0;border-bottom:2px solid #1a1a1a;margin-bottom:24px;background:#fff}
 .tab{flex:1;padding:12px 8px;border:none;cursor:pointer;background:transparent;color:#888;font-size:13px;font-weight:600;transition:all .15s;border-bottom:2px solid transparent;font-family:inherit;text-align:center}
 .tab.on{color:#1a1a1a;border-bottom-color:#1a1a1a;background:#fafaf5}
 .tab:hover:not(.on){color:#555;background:#fafaf8}
 .tab .num{display:inline-block;background:#eee;padding:0 7px;border-radius:3px;font-size:11px;margin-left:4px;font-family:'IBM Plex Mono',monospace}
 .tab.on .num{background:#1a1a1a;color:#fff}
-
-/* ── Panels ── */
 .pnl{display:none}.pnl.on{display:block}
-
-/* ── Card ── */
 .cd{background:#fff;border:1px solid #ddd;margin-bottom:16px;padding:20px}
 .cd-t{font-size:13px;font-weight:700;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid #eee;text-transform:uppercase;letter-spacing:.06em;color:#555}
-
-/* ── Form ── */
 label{display:block;font-size:11px;font-weight:600;color:#888;margin-bottom:3px;text-transform:uppercase;letter-spacing:.04em}
 input,select,textarea{width:100%;padding:8px 10px;border:1px solid #ccc;background:#fff;color:#1a1a1a;font-size:13px;font-family:'IBM Plex Mono',monospace;outline:none;transition:border .15s}
 input:focus,select:focus,textarea:focus{border-color:#1a1a1a}
 .row{display:flex;gap:12px;flex-wrap:wrap}.row>*{flex:1;min-width:160px}
-
-/* ── Buttons ── */
 .btn{padding:10px 22px;border:2px solid #1a1a1a;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;transition:all .15s;text-transform:uppercase;letter-spacing:.04em}
 .btn-p{background:#1a1a1a;color:#fff}.btn-p:hover{background:#333}.btn-p:disabled{opacity:.3;cursor:default}
 .btn-s{background:#fff;color:#1a1a1a}.btn-s:hover{background:#f0f0ea}
 .btn-d{border-color:#c44;color:#c44;background:#fff}.btn-d:hover{background:#fef5f5}
 .btn-w{width:100%;text-align:center;padding:14px}
-
-/* ── Drop ── */
 .drop{border:2px dashed #bbb;padding:40px;text-align:center;cursor:pointer;transition:all .15s;background:#fafaf5}
 .drop:hover,.drop.over{border-color:#1a1a1a;background:#f5f5f0}
 .drop-ic{font-size:28px;margin-bottom:6px;opacity:.6}.drop-tx{color:#888;font-size:12px}
-
-/* ── Table ── */
 .tw{overflow-x:auto;border:1px solid #ddd}
 table{width:100%;border-collapse:collapse;font-size:12px;font-family:'IBM Plex Mono',monospace}
 th{padding:8px 10px;text-align:left;font-size:10px;font-weight:700;background:#f5f5f0;border-bottom:2px solid #1a1a1a;text-transform:uppercase;letter-spacing:.06em;color:#888;white-space:nowrap}
 td{padding:7px 10px;border-bottom:1px solid #eee;white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis}
 tr:hover td{background:#fafaf5}
-
-/* ── Stats ── */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
 .st{background:#fff;border:1px solid #ddd;padding:16px;text-align:center}
 .st-l{font-size:10px;font-weight:700;color:#888;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
 .st-v{font-size:20px;font-weight:700;font-family:'IBM Plex Mono',monospace}
-
-/* ── Sale Row ── */
 .sr{background:#fff;border:1px solid #ddd;margin-bottom:6px;transition:border-color .15s}
 .sr:hover{border-color:#aaa}
 .sr-h{padding:10px 16px;cursor:pointer;display:flex;align-items:center;gap:12px}
@@ -80,11 +58,10 @@ tr:hover td{background:#fafaf5}
 .pg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
 .pc{background:#f8f8f3;padding:8px;border:1px solid #e5e5e0}
 .pc.miss{border-color:#d99}
+.pc.opt{border-color:#8b8;background:#f5faf5}
 .pc-l{font-size:9px;color:#888;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
 .pc-n{font-size:11px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pc input{padding:5px 6px;font-size:11px}
-
-/* ── Alert ── */
 .al{padding:12px 16px;margin-bottom:14px;border-left:4px solid}
 .al-w{background:#fffbe6;border-color:#e6a800;color:#8a6d00}
 .al-e{background:#fff0f0;border-color:#c44;color:#922}
@@ -93,18 +70,18 @@ tr:hover td{background:#fafaf5}
 .tag{display:inline-block;padding:2px 8px;font-size:11px;margin:2px 3px 2px 0;border:1px solid}
 .tag-m{border-color:#d99;color:#922;background:#fff0f0}
 .tag-o{border-color:#ccc;color:#666;background:#f8f8f3}
-
-/* ── Progress ── */
+.tag-g{border-color:#9c9;color:#264;background:#f0f8f0}
 .prog{width:100%;height:4px;background:#e5e5e0;margin:10px 0}
 .prog-f{height:100%;background:#1a1a1a;transition:width .3s}
-
-/* ── Misc ── */
 .mono{font-family:'IBM Plex Mono',monospace}
 .red{color:#c44}.grn{color:#2a7a2a}.ylw{color:#b08800}
 .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
 .mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
 .fx{display:flex;gap:10px;flex-wrap:wrap}.fx-c{align-items:center}
-
+.tbl-edit{margin-top:10px}
+.tbl-edit td{padding:4px 6px}
+.tbl-edit input{padding:4px 6px;font-size:11px;width:80px;text-align:right}
+.tbl-edit .gpu-name{font-weight:600;font-size:12px}
 @media(max-width:768px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .pg{grid-template-columns:repeat(2,1fr)}
@@ -118,19 +95,19 @@ tr:hover td{background:#fafaf5}
 <div class="hdr">
   <div>
     <div class="hdr-mark">TITAN</div>
-    <div class="hdr-sub">利益計算ツール — CSV → AI判別 → Excel</div>
+    <div class="hdr-sub">利益計算ツール v2</div>
   </div>
 </div>
 
 <div class="wrap">
   <div class="tabs">
-    <button class="tab on" onclick="go(0)" id="t0">設定・CSV取込</button>
-    <button class="tab" onclick="go(1)" id="t1">AI解析 <span class="num" id="b1">0</span></button>
-    <button class="tab" onclick="go(2)" id="t2">不足パーツ <span class="num" id="b2">0</span></button>
-    <button class="tab" onclick="go(3)" id="t3">売上・出力</button>
+    <div class="tab on" onclick="go(0)">設定・CSV取込</div>
+    <div class="tab" onclick="go(1)">AI解析 <span class="num" id="b1">0</span></div>
+    <div class="tab" onclick="go(2)">不足パーツ <span class="num" id="b2">0</span></div>
+    <div class="tab" onclick="go(3)">売上・出力</div>
   </div>
 
-  <!-- ======== 0: 設定 & CSV ======== -->
+  <!-- ===== Panel 0: Settings ===== -->
   <div class="pnl on" id="p0">
     <div class="cd">
       <div class="cd-t">API設定 <button class="btn btn-s" onclick="saveSettings()" style="padding:3px 10px;font-size:10px;float:right">設定を保存</button></div>
@@ -138,10 +115,8 @@ tr:hover td{background:#fafaf5}
         <div style="flex:3"><label>OpenAI API Key</label><input type="password" id="apiKey" placeholder="sk-..."></div>
         <div style="flex:1"><label>Model</label>
           <select id="mdl">
-            <option value="gpt-4.1-mini">GPT-4.1 mini</option>
-            <option value="gpt-4o-mini">GPT-4o mini</option>
-            <option value="gpt-5-mini">GPT-5 mini</option>
-            <option value="gpt-4.1-nano">GPT-4.1 nano</option>
+            <option value="gpt-4.1-mini">GPT-4.1 mini（推奨）</option>
+            <option value="gpt-4.1-nano">GPT-4.1 nano（安い）</option>
           </select>
         </div>
       </div>
@@ -149,45 +124,136 @@ tr:hover td{background:#fafaf5}
         <button class="btn btn-s" onclick="testAPI()" style="padding:6px 14px;font-size:11px">API接続テスト</button>
         <span id="apiTestResult" style="margin-left:10px;font-size:12px"></span>
       </div>
-      <div class="mt8 row">
-        <div><label>送料デフォルト ¥</label><input type="number" id="defShip" value="1500" style="width:140px"></div>
-        <div><label>手数料率 %</label><input type="number" id="feeRate" value="10" style="width:100px" step="0.1"></div>
+      <div class="row mt12">
+        <div><label>送料デフォルト ¥</label><input type="number" id="defShip" value="1500"></div>
+        <div><label>手数料率 %</label><input type="number" id="feeRate" value="10"></div>
       </div>
     </div>
 
     <div class="cd">
       <div class="cd-t">消費税設定</div>
       <div class="row">
-        <div style="flex:1">
-          <label>消費税</label>
+        <div><label>消費税</label>
           <select id="taxMode" onchange="taxModeChange()">
-            <option value="off">考慮しない</option>
-            <option value="simple">簡易課税</option>
+            <option value="off">なし</option>
+            <option value="simple" selected>簡易課税</option>
             <option value="standard">本則課税</option>
           </select>
         </div>
-        <div id="taxSimpleWrap" style="flex:1;display:none">
-          <label>事業区分（簡易課税）</label>
+        <div id="taxSimpleWrap"><label>事業区分（簡易課税）</label>
           <select id="taxSimpleCat">
-            <option value="0.90">第1種 卸売業 90%</option>
-            <option value="0.80" selected>第2種 小売業 80%</option>
-            <option value="0.70">第3種 製造業 70%</option>
-            <option value="0.60">第4種 その他 60%</option>
-            <option value="0.50">第5種 サービス 50%</option>
+            <option value="90">第1種 卸売業 90%</option>
+            <option value="80" selected>第2種 小売業 80%</option>
+            <option value="70">第3種 製造業 70%</option>
+            <option value="60">第4種 その他 60%</option>
+            <option value="50">第5種 サービス業 50%</option>
           </select>
         </div>
-        <div id="taxStdWrap" style="flex:1;display:none">
-          <label>仕入税額控除率 %</label>
-          <input type="number" id="taxInputRate" value="100" style="width:100px" step="1">
-          <div style="font-size:10px;color:#888;margin-top:2px">インボイス登録業者からの仕入割合</div>
-        </div>
+        <div id="taxStdWrap" style="display:none"><label>インボイス仕入税率 %</label><input type="number" id="taxInputRate" value="100"></div>
       </div>
-      <div id="taxNote" style="font-size:11px;color:#888;margin-top:8px"></div>
+      <div class="mt8" style="font-size:11px;color:#888" id="taxDesc">簡易課税: 消費税額 = 売上税額 ×（1 - みなし仕入率）</div>
+    </div>
+
+    <div class="cd">
+      <div class="cd-t">原価テーブル
+        <button class="btn btn-s" onclick="saveAllTables()" style="padding:3px 10px;font-size:10px;float:right">全テーブル保存</button>
+      </div>
+
+      <!-- GPU Base Table -->
+      <details open>
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ GPUベース原価（GPUで全パーツのベース原価が決まる）</summary>
+        <div class="tw" style="max-height:400px;overflow-y:auto">
+          <table class="tbl-edit" id="gpuTableEdit">
+            <thead><tr>
+              <th>GPU型番</th><th>グラボ</th><th>CPU</th><th>MB</th><th>RAM</th><th>SSD</th><th>ケース</th><th>電源</th><th>クーラー</th><th>合計</th><th></th>
+            </tr></thead>
+            <tbody id="gpuTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newGpuName" placeholder="新GPU型番（例: RTX5080）" style="width:200px">
+          <button class="btn btn-s" onclick="addGpuRow()" style="padding:4px 12px;font-size:11px">GPU追加</button>
+        </div>
+      </details>
+
+      <!-- CPU Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ CPU価格（オプション変更時の原価）</summary>
+        <div class="tw">
+          <table class="tbl-edit"><thead><tr><th>CPU名</th><th>原価 ¥</th><th></th></tr></thead>
+            <tbody id="cpuTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newCpuName" placeholder="CPU名（例: 5800X3D）" style="width:160px">
+          <input type="number" id="newCpuPrice" placeholder="原価" style="width:100px">
+          <button class="btn btn-s" onclick="addPartRow('cpu')" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+      </details>
+
+      <!-- RAM Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ RAM価格</summary>
+        <div class="tw">
+          <table class="tbl-edit"><thead><tr><th>RAM</th><th>原価 ¥</th><th></th></tr></thead>
+            <tbody id="ramTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newRamName" placeholder="名称（例: 64GB DDR5）" style="width:160px">
+          <input type="number" id="newRamPrice" placeholder="原価" style="width:100px">
+          <button class="btn btn-s" onclick="addPartRow('ram')" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+      </details>
+
+      <!-- SSD Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ SSD価格</summary>
+        <div class="tw">
+          <table class="tbl-edit"><thead><tr><th>SSD</th><th>原価 ¥</th><th></th></tr></thead>
+            <tbody id="ssdTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newSsdName" placeholder="名称（例: 4TB）" style="width:160px">
+          <input type="number" id="newSsdPrice" placeholder="原価" style="width:100px">
+          <button class="btn btn-s" onclick="addPartRow('ssd')" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+      </details>
+
+      <!-- Option Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ オプション価格（水冷・WiFi等）</summary>
+        <div class="tw">
+          <table class="tbl-edit"><thead><tr><th>オプション名</th><th>原価 ¥</th><th></th></tr></thead>
+            <tbody id="optTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newOptName" placeholder="名称（例: 360mm水冷）" style="width:160px">
+          <input type="number" id="newOptPrice" placeholder="原価" style="width:100px">
+          <button class="btn btn-s" onclick="addPartRow('other')" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+      </details>
+
+      <!-- Peripheral Fixed Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ 周辺機器（固定価格）</summary>
+        <div class="row">
+          <div><label>キーボード ¥</label><input type="number" id="fixKb" value="1500" onchange="fixedPrices.keyboard=parseInt(this.value)||0"></div>
+          <div><label>マウス ¥</label><input type="number" id="fixMouse" value="1000" onchange="fixedPrices.mouse=parseInt(this.value)||0"></div>
+          <div><label>モニター（通常）¥</label><input type="number" id="fixMon" value="3000" onchange="fixedPrices.monitor=parseInt(this.value)||0"></div>
+          <div><label>モニター（144hz）¥</label><input type="number" id="fixMon144" value="8000" onchange="fixedPrices.monitor144hz=parseInt(this.value)||0"></div>
+        </div>
+      </details>
     </div>
 
     <div class="cd">
       <div class="cd-t">CSV取込</div>
-      <div class="al al-w" style="margin-bottom:12px"><h4>注意</h4><p>事務局によって対応された商品は読み取りできません。必ず手動で追加してください。</p></div>
+      <div class="al al-w">
+        <h4>注意</h4>
+        <p>事務局によって対応された商品は読み取りできません。必ず手動で追加してください。</p>
+      </div>
       <div class="drop" id="dz" onclick="$('csvF').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)">
         <div class="drop-ic">↑</div>
         <div class="drop-tx">メルカリCSVをドラッグ＆ドロップ / クリック<br><span style="font-size:10px;color:#aaa">※Shift-JIS(cp932)で自動読込</span></div>
@@ -215,55 +281,53 @@ tr:hover td{background:#fafaf5}
       </div>
     </div>
 
-    <button class="btn btn-p btn-w" id="btnGo" onclick="startAI()" disabled>AI解析開始</button>
-
-    <div class="cd mt16">
-      <div class="cd-t">引き継ぎ（データ保存・復元）</div>
+    <div class="cd">
+      <div class="cd-t">引き継ぎ</div>
       <div class="fx">
-        <button class="btn btn-s" onclick="exportJSON()">全データをJSONで保存</button>
-        <button class="btn btn-s" onclick="$('impF').click()">JSONから復元</button>
+        <button class="btn btn-s" onclick="exportJSON()">データ書出し</button>
+        <button class="btn btn-s" onclick="$('impF').click()">データ読込</button>
         <input type="file" id="impF" accept=".json" hidden onchange="importJSON(event)">
-        <button class="btn btn-d" onclick="clearAll()">全データ削除</button>
+        <button class="btn btn-d" onclick="if(confirm('全データを削除しますか？'))clearAll()">全削除</button>
       </div>
-      <p style="font-size:11px;color:#888;margin-top:8px">
-        パーツマスター＋売上データをJSONファイルで保存・復元できます。PC移行時や共有に使えます。
-      </p>
     </div>
+
+    <button class="btn btn-p btn-w mt16" id="btnGo" onclick="startAI()" disabled>AI解析開始</button>
   </div>
 
-  <!-- ======== 1: AI解析 ======== -->
+  <!-- ===== Panel 1: AI Parse ===== -->
   <div class="pnl" id="p1">
     <div id="aiProg" style="display:none">
       <div class="cd">
         <div class="cd-t">解析中...</div>
-        <div class="prog"><div class="prog-f" id="pBar"></div></div>
-        <div class="mono" style="text-align:center;color:#888;font-size:13px" id="pTxt">0 / 0</div>
-        <div style="text-align:center;color:#aaa;font-size:11px;margin-top:4px" id="pCur"></div>
+        <div class="prog"><div class="prog-f" id="pBar" style="width:0%"></div></div>
+        <div class="fx fx-c mt8">
+          <span class="mono" id="pTxt">0 / 0</span>
+          <span style="font-size:11px;color:#888" id="pCur"></span>
+        </div>
       </div>
     </div>
     <div id="aiRes" style="display:none">
       <div class="al al-s" id="aiSt"></div>
-      <div id="aiItems"></div>
-      <button class="btn btn-p mt12" onclick="go(2)">不足パーツ確認 →</button>
+      <div id="aiList"></div>
     </div>
   </div>
 
-  <!-- ======== 2: 不足パーツ ======== -->
+  <!-- ===== Panel 2: Missing Parts ===== -->
   <div class="pnl" id="p2">
-    <div id="missAl" class="al al-w" style="display:none"></div>
-    <div id="missList"></div>
-    <div id="missNone" class="al al-s" style="display:none"><h4>全パーツ設定済み</h4></div>
-    <div class="fx mt12">
-      <button class="btn btn-p" onclick="applyMiss()">保存して次へ →</button>
-      <button class="btn btn-s" onclick="go(3)">スキップ →</button>
-    </div>
+    <div id="missWrap"></div>
+    <button class="btn btn-p btn-w mt16" onclick="applyMissing();go(3)">適用して売上へ</button>
   </div>
 
-  <!-- ======== 3: 売上一覧 ======== -->
+  <!-- ===== Panel 3: Sales ===== -->
   <div class="pnl" id="p3">
-    <div class="stats" id="stArea"></div>
+    <div class="stats">
+      <div class="st"><div class="st-l">総売上</div><div class="st-v" id="s1">¥0</div></div>
+      <div class="st"><div class="st-l">総利益（税引後）</div><div class="st-v grn" id="s2">¥0</div></div>
+      <div class="st"><div class="st-l">平均利益率</div><div class="st-v" id="s3">0%</div></div>
+      <div class="st"><div class="st-l">消費税合計</div><div class="st-v ylw" id="s4">¥0</div></div>
+    </div>
     <div class="fx mb16">
-      <button class="btn btn-p" onclick="toExcel()">Excel出力</button>
+      <button class="btn btn-p" onclick="toExcel()">EXCEL出力</button>
       <button class="btn btn-s" onclick="go(0)">← 新規CSV取込</button>
     </div>
     <div id="salesList"></div>
@@ -271,92 +335,296 @@ tr:hover td{background:#fafaf5}
 </div>
 
 <script>
-// ================================================================
-// State
-// ================================================================
-let csvR=[],csvH=[],sales=[],master={},curFile=null;
-const LS_M='titan_m_v3',LS_S='titan_s_v3';
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const LS_CFG='titan_cfg_v2';
+const LS_GPU='titan_gpu_v2';
+const LS_SALES='titan_sales_v2';
+const LS_OPT='titan_opt_v2';
 
-function $(id){return document.getElementById(id)}
-function go(n){
-  document.querySelectorAll('.pnl').forEach((p,i)=>{p.classList.toggle('on',i===n)});
-  document.querySelectorAll('.tab').forEach((t,i)=>{t.classList.toggle('on',i===n)});
-  if(n===2)renderMiss();if(n===3)renderSales();
+// ================================================================
+// GPU Base Cost Table (イトウメルカリ用)
+// ================================================================
+const DEFAULT_GPU_TABLE={
+  'RX9070XT':  {gpu:110000,cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
+  'RX9060XT':  {gpu:50000, cpu:15000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
+  'RTX5070':   {gpu:105000,cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
+  'RTX5070Ti': {gpu:165000,cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
+  'RX9070':    {gpu:100000,cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
+  'RTX5060Ti': {gpu:70000, cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
+  'RTX4070Ti': {gpu:90000, cpu:15000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:1300,cool:300},
+  'RTX3080':   {gpu:45000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:1300,cool:300},
+  'RTX3070':   {gpu:28000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RTX2080':   {gpu:20000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RTX4060':   {gpu:35000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RTX3060':   {gpu:32000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'GTX1080Ti': {gpu:8000,  cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RTX4060Ti': {gpu:40000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RTX3050':   {gpu:33000, cpu:15000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
+  'RTX5050':   {gpu:45000, cpu:15000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
+  'RTX5060':   {gpu:54000, cpu:15000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
+  'RTX2060':   {gpu:13000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:700, cool:300},
+  'RX7600':    {gpu:41000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
+};
+
+// Option upgrade prices (editable)
+const DEFAULT_OPT={
+  cpu:{'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'7700X':25000,'5900X':20000,'9800X3D':50000,'5600X':12000,'5600':10000},
+  ram:{'DDR4 16GB':8000,'DDR4 32GB':12000,'DDR5 16GB':10000,'DDR5 32GB':15000,'DDR5 64GB':25000},
+  ssd:{'512GB':7000,'1TB':10000,'2TB':15000},
+  other:{'簡易水冷':5000,'液晶簡易水冷':8000,'120mm空冷クーラー':2000,'内蔵WiFi':2000,'USB WiFi':1000,'内蔵Bluetooth':1000,'USB Bluetooth':500}
+};
+const DEFAULT_FIXED={keyboard:1500,mouse:1000,monitor:3000,monitor144hz:8000};
+
+let optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));
+let fixedPrices={...DEFAULT_FIXED};
+
+let gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));
+let sales=[];
+let csvH=[],csvR=[],curFile=null;
+
+// ================================================================
+// GPU Table UI
+// ================================================================
+function renderGpuTable(){
+  const cols=['gpu','cpu','mb','ram','ssd','cas','psu','cool'];
+  let html='';
+  for(const[k,v]of Object.entries(gpuTable)){
+    const total=cols.reduce((s,c)=>s+(v[c]||0),0);
+    html+=`<tr><td class="gpu-name">${esc(k)}</td>`;
+    cols.forEach(c=>{html+=`<td><input type="number" value="${v[c]||0}" onchange="gpuTable['${k}'].${c}=parseInt(this.value)||0;renderGpuTable()"></td>`});
+    html+=`<td class="mono" style="font-weight:600">¥${total.toLocaleString()}</td>`;
+    html+=`<td><button onclick="delete gpuTable['${k}'];renderGpuTable()" style="border:none;color:#c44;cursor:pointer;font-size:14px;background:none">×</button></td></tr>`;
+  }
+  $('gpuTbody').innerHTML=html;
+}
+function addGpuRow(){
+  const name=$('newGpuName').value.trim();
+  if(!name){alert('GPU型番を入力');return}
+  if(gpuTable[name]){alert('既に存在');return}
+  gpuTable[name]={gpu:0,cpu:3500,mb:4000,ram:8000,ssd:7000,cas:7000,psu:700,cool:300};
+  $('newGpuName').value='';renderGpuTable();
 }
 
 // ================================================================
-// Settings save/load
+// Parts Sub-table UI (CPU/RAM/SSD/Option)
 // ================================================================
-const LS_CFG='titan_cfg_v1';
+function renderPartTable(cat,tbodyId){
+  const data=optPrices[cat]||{};
+  let html='';
+  for(const[k,v]of Object.entries(data)){
+    html+=`<tr><td style="font-size:12px">${esc(k)}</td>`;
+    html+=`<td><input type="number" value="${v}" onchange="optPrices['${cat}']['${k}']=parseInt(this.value)||0"></td>`;
+    html+=`<td><button onclick="delete optPrices['${cat}']['${k}'];renderPartTable('${cat}','${tbodyId}')" style="border:none;color:#c44;cursor:pointer;font-size:14px;background:none">×</button></td></tr>`;
+  }
+  $(tbodyId).innerHTML=html;
+}
+function addPartRow(cat){
+  const nameId=cat==='other'?'newOptName':'new'+cat.charAt(0).toUpperCase()+cat.slice(1)+'Name';
+  const priceId=cat==='other'?'newOptPrice':'new'+cat.charAt(0).toUpperCase()+cat.slice(1)+'Price';
+  const name=$(nameId).value.trim();
+  const price=parseInt($(priceId).value)||0;
+  if(!name){alert('名称を入力');return}
+  if(!optPrices[cat])optPrices[cat]={};
+  optPrices[cat][name]=price;
+  $(nameId).value='';$(priceId).value='';
+  renderAllPartTables();
+}
+function renderAllPartTables(){
+  renderPartTable('cpu','cpuTbody');
+  renderPartTable('ram','ramTbody');
+  renderPartTable('ssd','ssdTbody');
+  renderPartTable('other','optTbody');
+}
+
+// ================================================================
+// Save/Load All Tables
+// ================================================================
+function saveAllTables(){
+  localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));
+  localStorage.setItem(LS_OPT,JSON.stringify(optPrices));
+  localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));
+  alert('全テーブル保存完了');
+}
+function loadAllTables(){
+  try{const g=JSON.parse(localStorage.getItem(LS_GPU));if(g)gpuTable=g}catch{}
+  try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o)optPrices=o}catch{}
+  try{const f=JSON.parse(localStorage.getItem('titan_fixed_v2'));if(f){fixedPrices=f;$('fixKb').value=f.keyboard||1500;$('fixMouse').value=f.mouse||1000;$('fixMon').value=f.monitor||3000;$('fixMon144').value=f.monitor144hz||8000}}catch{}
+}
+
+// ================================================================
+// GPU Matching
+// ================================================================
+function matchGpu(gpuName){
+  if(!gpuName)return null;
+  const n=gpuName.toUpperCase().replace(/\s+/g,'').replace(/GEFORCE/i,'').replace(/RADEON/i,'').trim();
+  // Exact match first
+  for(const k of Object.keys(gpuTable)){
+    if(n.includes(k.toUpperCase().replace(/\s+/g,'')))return k;
+  }
+  return null;
+}
+
+// ================================================================
+// Option cost calculation
+// ================================================================
+function calcOptionCost(optionStr){
+  if(!optionStr)return 0;
+  let total=0;
+  const items=optionStr.split(/[,、，]/);
+  for(let item of items){
+    item=item.trim();if(!item)continue;
+    for(const[k,v]of Object.entries(optPrices.other||{})){
+      if(item.toLowerCase().includes(k.toLowerCase())){total+=v;break}
+    }
+  }
+  return total;
+}
+
+function getCpuCost(cpuName,baseCost){
+  if(!cpuName)return baseCost;
+  const n=cpuName.toUpperCase().replace(/RYZEN\s*(7|9|5)\s*/i,'').replace(/CORE\s*I\d\s*/i,'').trim();
+  for(const[k,v]of Object.entries(optPrices.cpu||{})){
+    if(n.includes(k.toUpperCase()))return v;
+  }
+  return baseCost;
+}
+
+function getRamCost(ramStr,baseCost){
+  if(!ramStr)return baseCost;
+  const n=ramStr.toUpperCase().replace(/\s+/g,' ').trim();
+  const is5=n.includes('DDR5');
+  if(n.includes('64'))return optPrices.ram?.['DDR5 64GB']||baseCost;
+  if(n.includes('32'))return is5?(optPrices.ram?.['DDR5 32GB']||baseCost):(optPrices.ram?.['DDR4 32GB']||baseCost);
+  if(n.includes('16'))return is5?(optPrices.ram?.['DDR5 16GB']||baseCost):(optPrices.ram?.['DDR4 16GB']||baseCost);
+  return baseCost;
+}
+
+function getSsdCost(ssdStr,baseCost){
+  if(!ssdStr)return baseCost;
+  const n=ssdStr.toUpperCase();
+  if(n.includes('2TB'))return optPrices.ssd?.['2TB']||baseCost;
+  if(n.includes('1TB'))return optPrices.ssd?.['1TB']||baseCost;
+  if(n.includes('512'))return optPrices.ssd?.['512GB']||baseCost;
+  return baseCost;
+}
+
+// ================================================================
+// Full cost calculation for a sale
+// ================================================================
+function calcCosts(parts,gpuKey){
+  const base=gpuKey?gpuTable[gpuKey]:null;
+  const costs={};
+
+  if(base){
+    costs.gpu=base.gpu;
+    costs.cpu=getCpuCost(parts.cpu,base.cpu);
+    costs.mb=base.mb; // A520固定
+    costs.ram=getRamCost(parts.ram,base.ram);
+    costs.ssd=getSsdCost(parts.ssd,base.ssd);
+    costs.cas=base.cas;
+    costs.psu=base.psu;
+    costs.cool=base.cool;
+  } else {
+    // GPU not in table - all unknown
+    costs.gpu=0;costs.cpu=0;costs.mb=4000;costs.ram=8000;costs.ssd=7000;costs.cas=7000;costs.psu=0;costs.cool=300;
+  }
+
+  // Options (水冷,WiFi etc)
+  costs.option=calcOptionCost(parts.option);
+
+  // Peripherals
+  if(parts.monitor){
+    const mon=parts.monitor.toUpperCase();
+    costs.monitor=(mon.includes('144')||mon.includes('165')||mon.includes('240'))?fixedPrices.monitor144hz:fixedPrices.monitor;
+  }else{costs.monitor=0}
+  costs.keyboard=(parts.keyboard)?fixedPrices.keyboard+fixedPrices.mouse:0;
+
+  return costs;
+}
+
+function totalCost(costs){
+  return Object.values(costs).reduce((s,v)=>s+(v||0),0);
+}
+
+// ================================================================
+// Profit & Tax
+// ================================================================
+function calcTax(salePrice,costTotal,feeAmt,shipping){
+  const mode=$('taxMode').value;
+  if(mode==='off')return 0;
+  if(mode==='simple'){
+    const rate=parseInt($('taxSimpleCat').value)||80;
+    const outputTax=Math.floor(salePrice/1.1*0.1);
+    return Math.floor(outputTax*(1-rate/100));
+  }
+  // standard
+  const outputTax=Math.floor(salePrice/1.1*0.1);
+  const inputRate=(parseInt($('taxInputRate').value)||100)/100;
+  const inputTax=Math.floor((costTotal+feeAmt+shipping)/1.1*0.1*inputRate);
+  return Math.max(0,outputTax-inputTax);
+}
+
+function calcProfit(s){
+  const fee=Math.floor(s.sale_price*s.fee_rate);
+  const costT=totalCost(s.costs);
+  const tax=calcTax(s.sale_price,costT,fee,s.shipping);
+  return {fee,costTotal:costT,tax,profit:s.sale_price-costT-fee-s.shipping-tax,profitRate:s.sale_price>0?((s.sale_price-costT-fee-s.shipping-tax)/s.sale_price):0};
+}
+
+// ================================================================
+// Settings
+// ================================================================
 function saveSettings(){
-  const cfg={
-    apiKey:$('apiKey').value,
-    model:$('mdl').value,
-    defShip:$('defShip').value,
-    feeRate:$('feeRate').value,
-    taxMode:$('taxMode').value,
-    taxSimpleCat:$('taxSimpleCat').value,
-    taxInputRate:$('taxInputRate').value
-  };
-  localStorage.setItem(LS_CFG,JSON.stringify(cfg));
-  alert('設定を保存しました');
+  const cfg={apiKey:$('apiKey').value,model:$('mdl').value,defShip:$('defShip').value,feeRate:$('feeRate').value,taxMode:$('taxMode').value,taxSimpleCat:$('taxSimpleCat').value,taxInputRate:$('taxInputRate').value};
+  localStorage.setItem(LS_CFG,JSON.stringify(cfg));alert('設定を保存しました');
 }
 function loadSettings(){
-  try{
-    const cfg=JSON.parse(localStorage.getItem(LS_CFG));
-    if(!cfg)return;
-    if(cfg.apiKey)$('apiKey').value=cfg.apiKey;
-    if(cfg.model)$('mdl').value=cfg.model;
-    if(cfg.defShip)$('defShip').value=cfg.defShip;
-    if(cfg.feeRate)$('feeRate').value=cfg.feeRate;
-    if(cfg.taxMode){$('taxMode').value=cfg.taxMode;taxModeChange()}
-    if(cfg.taxSimpleCat)$('taxSimpleCat').value=cfg.taxSimpleCat;
-    if(cfg.taxInputRate)$('taxInputRate').value=cfg.taxInputRate;
-  }catch{}
+  try{const c=JSON.parse(localStorage.getItem(LS_CFG));if(!c)return;
+  if(c.apiKey)$('apiKey').value=c.apiKey;if(c.model)$('mdl').value=c.model;
+  if(c.defShip)$('defShip').value=c.defShip;if(c.feeRate)$('feeRate').value=c.feeRate;
+  if(c.taxMode){$('taxMode').value=c.taxMode;taxModeChange()}
+  if(c.taxSimpleCat)$('taxSimpleCat').value=c.taxSimpleCat;
+  if(c.taxInputRate)$('taxInputRate').value=c.taxInputRate;}catch{}
+}
+function taxModeChange(){
+  const m=$('taxMode').value;
+  $('taxSimpleWrap').style.display=m==='simple'?'':'none';
+  $('taxStdWrap').style.display=m==='standard'?'':'none';
+  $('taxDesc').textContent=m==='off'?'消費税計算なし':m==='simple'?'簡易課税: 消費税額 = 売上税額 ×（1 - みなし仕入率）':'本則課税: 売上税額 - 仕入税額';
 }
 
 // ================================================================
 // Storage
 // ================================================================
-function loadLS(){
-  try{master=JSON.parse(localStorage.getItem(LS_M))||{}}catch{master={}}
-  try{sales=JSON.parse(localStorage.getItem(LS_S))||[]}catch{sales=[]}
-}
-function saveM(){localStorage.setItem(LS_M,JSON.stringify(master))}
-function saveS(){localStorage.setItem(LS_S,JSON.stringify(sales))}
-
-// ================================================================
-// 引き継ぎ Export / Import
-// ================================================================
+function saveS(){localStorage.setItem(LS_SALES,JSON.stringify(sales))}
+function loadS(){try{sales=JSON.parse(localStorage.getItem(LS_SALES))||[]}catch{sales=[]}}
+function clearAll(){sales=[];saveS();localStorage.removeItem(LS_GPU);localStorage.removeItem(LS_OPT);localStorage.removeItem('titan_fixed_v2');gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));fixedPrices={...DEFAULT_FIXED};renderGpuTable();renderAllPartTables();$('fixKb').value=1500;$('fixMouse').value=1000;$('fixMon').value=3000;$('fixMon144').value=8000;renderSales();$('b1').textContent=0;$('b2').textContent=0}
 function exportJSON(){
-  const cfg={apiKey:$('apiKey').value,model:$('mdl').value,defShip:$('defShip').value,feeRate:$('feeRate').value,taxMode:$('taxMode').value,taxSimpleCat:$('taxSimpleCat').value,taxInputRate:$('taxInputRate').value};
-  const d={master,sales,settings:cfg,exported:new Date().toISOString()};
-  const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);
-  a.download=`TITAN_data_${new Date().toISOString().slice(0,10)}.json`;
-  a.click();URL.revokeObjectURL(a.href);
+  const d={gpuTable,optPrices,fixedPrices,sales,settings:JSON.parse(localStorage.getItem(LS_CFG)||'{}'),exported:new Date().toISOString()};
+  const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_${new Date().toISOString().slice(0,10)}.json`;a.click();
 }
 function importJSON(e){
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    try{
-      const d=JSON.parse(ev.target.result);
-      if(d.master)master=d.master;
-      if(d.sales)sales=d.sales;
-      if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
-      saveM();saveS();
-      alert(`復元完了: パーツ${Object.keys(master).length}件, 売上${sales.length}件`);
-      $('b1').textContent=sales.length;
-    }catch{alert('JSONの読み込みに失敗しました')}
-  };r.readAsText(f);
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+    if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
+    if(d.optPrices){optPrices=d.optPrices;localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
+    if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard;$('fixMouse').value=fixedPrices.mouse;$('fixMon').value=fixedPrices.monitor}
+    if(d.sales){sales=d.sales;saveS()}
+    if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
+    renderSales();alert('読込完了');}catch(e){alert('エラー: '+e.message)}};
+  r.readAsText(f);
 }
-function clearAll(){
-  if(!confirm('パーツマスター・売上データを全て削除しますか？'))return;
-  master={};sales=[];saveM();saveS();
-  $('b1').textContent='0';$('b2').textContent='0';
-  alert('削除完了');
+
+// ================================================================
+// Tabs
+// ================================================================
+function go(n){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('on',i===n));
+  document.querySelectorAll('.pnl').forEach((p,i)=>p.classList.toggle('on',i===n));
+  if(n===2)renderMissing();
+  if(n===3)renderSales();
 }
 
 // ================================================================
@@ -365,20 +633,22 @@ function clearAll(){
 function onDrop(e){e.preventDefault();e.currentTarget.classList.remove('over');const f=e.dataTransfer.files[0];if(f){curFile=f;readCSV(f,'shift_jis')}}
 function onFile(e){const f=e.target.files[0];if(f){curFile=f;readCSV(f,'shift_jis')}}
 function reRead(enc){if(curFile)readCSV(curFile,enc)}
-
 function readCSV(file,enc){
   const r=new FileReader();
-  r.onload=e=>{
-    const lines=e.target.result.split('\n').filter(l=>l.trim());
-    if(lines.length<2)return;
+  r.onload=()=>{
+    const lines=r.result.split(/\r?\n/).filter(l=>l.trim());
+    if(lines.length<2){alert('データなし');return}
     csvH=pLine(lines[0]);csvR=[];
     for(let i=1;i<lines.length;i++){const v=pLine(lines[i]);const o={};csvH.forEach((h,j)=>o[h.trim()]=v[j]||'');csvR.push(o)}
     setupCSV();
-  };r.readAsText(file,enc);
+  };
+  r.readAsText(file,enc);
 }
-
-function pLine(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const ch=l[i];if(ch==='"'){if(q&&l[i+1]==='"'){c+='"';i++}else q=!q}else if(ch===','&&!q){r.push(c);c=''}else c+=ch}r.push(c);return r}
-
+function pLine(line){
+  const r=[];let c='',q=false;
+  for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){q=!q}else if(ch===','&&!q){r.push(c);c=''}else{c+=ch}}
+  r.push(c);return r;
+}
 function setupCSV(){
   $('csvUI').style.display='block';
   $('csvSt').innerHTML=`<h4>${csvR.length}件 読込完了</h4>`;
@@ -387,46 +657,23 @@ function setupCSV(){
     csvH.forEach(h=>{const o=document.createElement('option');o.value=h.trim();o.textContent=h.trim();s.appendChild(o)});
   });
   csvH.forEach(h=>{
-    const ht=h.trim();const hl=ht.toLowerCase();
-    if(ht==='商品名'||hl.includes('name')||hl.includes('title'))$('cN').value=ht;
-    if(ht==='説明'||ht==='説明文'||ht==='商品説明'||hl.includes('description'))$('cD').value=ht;
-    if(ht==='価格'||hl.includes('price')||ht==='販売価格'||ht==='金額')$('cP').value=ht;
-    if(ht==='終了日'||ht==='出品日'||ht==='更新日'||hl.includes('date'))$('cDt').value=ht;
+    const ht=h.trim();
+    if(ht==='商品名')$('cN').value=ht;
+    if(ht==='説明'||ht==='説明文')$('cD').value=ht;
+    if(ht==='価格')$('cP').value=ht;
+    if(ht==='終了日')$('cDt').value=ht;
     if(ht==='出品状況')$('cSt').value=ht;
   });
-  // Show sold count if 出品状況 detected
   const stCol=csvH.find(h=>h.trim()==='出品状況');
   if(stCol){
     const soldCnt=csvR.filter(r=>(r[stCol.trim()]||'').includes('売却')).length;
     $('csvSt').innerHTML=`<h4>${csvR.length}件 読込完了（うち売却済: ${soldCnt}件）</h4>`;
   }
-
   const mc=Math.min(csvH.length,6);
-  let h='<table><thead><tr>';for(let i=0;i<mc;i++)h+=`<th>${csvH[i]}</th>`;
-  h+='</tr></thead><tbody>';
+  let h='<table><tr>';for(let i=0;i<mc;i++)h+=`<th>${esc(csvH[i].trim())}</th>`;h+='</tr>';
   for(let i=0;i<Math.min(csvR.length,5);i++){h+='<tr>';for(let j=0;j<mc;j++){const v=csvR[i][csvH[j].trim()]||'';h+=`<td title="${esc(v)}">${esc(v.substring(0,50))}</td>`}h+='</tr>'}
-  h+='</tbody></table>';$('csvPv').innerHTML=h;
+  h+='</table>';$('csvPv').innerHTML=h;
   $('btnGo').disabled=false;
-}
-
-function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
-
-// ================================================================
-// 消費税
-// ================================================================
-function taxModeChange(){
-  const m=$('taxMode').value;
-  $('taxSimpleWrap').style.display=m==='simple'?'':'none';
-  $('taxStdWrap').style.display=m==='standard'?'':'none';
-  const notes={off:'',simple:'簡易課税: 消費税額 = 売上税額 ×（1 - みなし仕入率）',standard:'本則課税: 消費税額 = 売上税額 - 仕入税額。インボイス未登録からの仕入は控除不可'};
-  $('taxNote').textContent=notes[m]||'';
-}
-function calcTax(sp,tc,fee,ship){
-  const mode=$('taxMode').value;if(mode==='off')return 0;
-  const outTax=Math.floor(sp/1.1*0.1);
-  if(mode==='simple'){const d=parseFloat($('taxSimpleCat').value)||0.80;return Math.floor(outTax*(1-d))}
-  if(mode==='standard'){const r=(parseFloat($('taxInputRate').value)||100)/100;const inTax=Math.floor((tc+fee+ship)/1.1*0.1*r);return Math.max(0,outTax-inTax)}
-  return 0;
 }
 
 // ================================================================
@@ -439,18 +686,21 @@ async function testAPI(){
   try{
     const resp=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model,messages:[{role:'user',content:'Reply OK'}],max_completion_tokens:10})
+      body:JSON.stringify({model,messages:[{role:'user',content:'Reply OK'}],max_tokens:10})
     });
     const data=await resp.json();
     if(data.error){el.innerHTML=`<span class="red">エラー: ${data.error.message}</span>`;return}
-    if(data.choices?.[0]){el.innerHTML=`<span class="grn">接続OK (${model})</span>`}
-    else{el.innerHTML=`<span class="red">不明レスポンス: ${JSON.stringify(data).substring(0,100)}</span>`}
+    if(data.choices?.[0])el.innerHTML=`<span class="grn">接続OK (${model})</span>`;
+    else el.innerHTML=`<span class="red">不明レスポンス</span>`;
   }catch(e){el.innerHTML=`<span class="red">通信エラー: ${e.message}</span>`}
 }
 
 let lastAPIError='';
 async function callGPT(name,desc,key,model){
   const cleanDesc=(desc||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,'').trim();
+
+  const gpuKeys=Object.keys(gpuTable).join(', ');
+
   const prompt=`以下のメルカリPC出品を解析してJSONで返せ。
 
 商品名: ${name||'不明'}
@@ -458,36 +708,65 @@ async function callGPT(name,desc,key,model){
 ${cleanDesc.substring(0,1500)}
 
 【重要ルール】
-- 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、それが最優先
-  例:「Ryzen 7 5700X に変更」→CPUはRyzen 7 5700X
-  例:「SSD 1TB に変更」→SSDは1TB
-  例:「①7700X に変更 ②SSD 1TB」→CPUは7700X、SSDは1TB
-- オプション記載パーツは後半のベース構成より優先
-- 「〜抜き」は除外（キーボード抜き→keyboard=null）
-- 「単品」=本体のみ
-- ケース名は商品名やスペックから判別
-- 水冷,WiFi,Bluetooth等はoptionに含める
+1. 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、そちらが最優先。
+   例:「Ryzen 7 5700X に変更」→ cpuは"Ryzen 7 5700X"
+   例:「SSD 1TB に変更」→ ssdは"1TB"
+   例:「メモリ DDR4 32GB」→ ramは"DDR4 32GB"
+2. 「〜抜き」は除外（キーボード抜き→keyboard=null、モニター抜き→monitor=null）
+3. 「単品」=本体のみ（monitor,keyboardともにnull）
+4. 「CPU無し」→ cpu=null
+5. gpu_keyは以下のいずれかに正規化: ${gpuKeys}
+6. ramは必ず「DDR4 16GB」「DDR4 32GB」「DDR5 16GB」「DDR5 32GB」「DDR5 64GB」のいずれかで返す。DDR記載なく16GBのみなら「DDR4 16GB」とする
+7. optionの正規化ルール:
+   - 水冷/簡易水冷→「簡易水冷」、液晶水冷/液晶簡易水冷→「液晶簡易水冷」
+   - WiFi/内蔵Wi-Fi/WiFi内蔵→「内蔵WiFi」、USB WiFi→「USB WiFi」
+   - Bluetooth/内蔵bluetooth→「内蔵Bluetooth」、USB Bluetooth→「USB Bluetooth」
+   - 120mm空冷クーラー→「120mm空冷クーラー」（optionに含める）
+   - カンマ区切りで複数
+8. monitorの判定:
+   - モニター付き→"フルHDモニター"
+   - 144hzモニター付き→"144hzモニター"（144hz/165hz/240hzの場合）
+   - モニター抜き or 単品→null
+9. keyboardの判定:
+   - キーボード・マウス付き→"セット"
+   - キーボード抜き or マウス抜き or 単品→null
+   - 「キーボード・マウス・マウスパッド抜き」→null
+   - モニターだけ付きの場合→keyboard=null
+10. ケース名は説明文に具体名がある場合のみ返す。不明ならnull
 
-JSON(不明はnull):
-{"cpu":"Ryzen 7 5700X","ram":"DDR4 16GB","mb":"B550","gpu":"RTX3080","ssd":"512GB NVMe","hdd":null,"psu":"650W","monitor":"24インチ","keyboard":"セット","case_name":"H17","option":"水冷,WiFi","is_fullset":true,"condition":"リファービッシュ"}
+JSON形式（不明はnull）:
+{
+  "gpu_key":"RTX3080",
+  "gpu":"GeForce RTX3080",
+  "cpu":"Ryzen 7 5700X",
+  "ram":"DDR4 16GB",
+  "ssd":"512GB",
+  "mb":null,
+  "monitor":"フルHDモニター",
+  "keyboard":"セット",
+  "case_name":null,
+  "option":"簡易水冷,内蔵WiFi",
+  "is_fullset":true,
+  "condition":"リファービッシュ"
+}
 
-JSONのみ。`;
+JSONのみ返せ。`;
 
   try{
     const resp=await fetch('https://api.openai.com/v1/chat/completions',{
       method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-      body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_completion_tokens:600})
+      body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_tokens:600})
     });
     const data=await resp.json();
-    if(data.error){lastAPIError=data.error.message;console.error('API:',data.error);return null}
+    if(data.error){lastAPIError=data.error.message;return null}
     const txt=data.choices?.[0]?.message?.content||'';
-    if(!txt){lastAPIError='Empty response: '+JSON.stringify(data).substring(0,200);return null}
+    if(!txt){lastAPIError='Empty response';return null}
     let j=txt.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'');
     const fi=j.indexOf('{'),li=j.lastIndexOf('}');
     if(fi===-1||li===-1){lastAPIError='No JSON: '+j.substring(0,150);return null}
     j=j.substring(fi,li+1);
     lastAPIError='';return JSON.parse(j);
-  }catch(e){lastAPIError=e.message;console.error('GPT:',e);return null}
+  }catch(e){lastAPIError=e.message;return null}
 }
 
 // ================================================================
@@ -504,12 +783,9 @@ async function startAI(){
   const defShip=parseInt($('defShip').value)||1500;
   const feeRate=(parseFloat($('feeRate').value)||10)/100;
 
-  // フィルタ
   let targetRows=csvR;
-  if(soldOnly&&cSt){
-    targetRows=csvR.filter(r=>(r[cSt]||'').includes('売却'));
-  }
-  if(!targetRows.length){alert('対象データがありません（売却済フィルタを確認）');return}
+  if(soldOnly&&cSt)targetRows=csvR.filter(r=>(r[cSt]||'').includes('売却'));
+  if(!targetRows.length){alert('対象データがありません');return}
 
   go(1);$('aiProg').style.display='block';$('aiRes').style.display='none';
   const newSales=[];
@@ -520,216 +796,197 @@ async function startAI(){
     const ds=cD?row[cD]||'':'';
     const pr=cP?parseInt(String(row[cP]).replace(/[,¥￥]/g,''))||0:0;
     const dt=cDt?row[cDt]||'':'';
-    const pct=((i+1)/targetRows.length*100).toFixed(0);
-    $('pBar').style.width=pct+'%';
+    $('pBar').style.width=((i+1)/targetRows.length*100).toFixed(0)+'%';
     $('pTxt').textContent=`${i+1} / ${targetRows.length}`;
     $('pCur').textContent=nm.substring(0,50);
 
     let parts=null;lastAPIError='';
-    try{if(nm||ds)parts=await callGPT(nm,ds,key,model)}catch(e){lastAPIError=e.message;console.error(e)}
+    try{if(nm||ds)parts=await callGPT(nm,ds,key,model)}catch(e){lastAPIError=e.message}
 
-    if(!parts&&lastAPIError){
-      console.warn(`Item ${i+1} failed: ${lastAPIError}`);
-    }
+    // Match GPU and calculate costs
+    let gpuKey=null;
+    let costs={};
+    let missing=[];
 
-    const costs={},miss=[];
-    const pks=['cpu','ram','mb','gpu','ssd','hdd','psu','monitor','keyboard','case_name','option'];
     if(parts){
-      pks.forEach(pk=>{
-        const v=parts[pk];
-        if(v){const m=findMatch(v,pk);if(m){costs[pk]=master[m].price}else{costs[pk]=0;miss.push({cat:pk,name:v})}}else{costs[pk]=0}
-      });
+      gpuKey=parts.gpu_key?matchGpu(parts.gpu_key):matchGpu(parts.gpu);
+      costs=calcCosts(parts,gpuKey);
+
+      // If GPU not matched, add to missing
+      if(!gpuKey&&parts.gpu){
+        missing.push({cat:'gpu',name:parts.gpu,note:'GPUテーブルに未登録'});
+      }
     }
-    newSales.push({id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,parts:parts||{},costs,missing:miss,shipping:defShip,fee_rate:feeRate,parseError:(!parts&&lastAPIError)?lastAPIError:''});
+
+    newSales.push({
+      id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,
+      parts:parts||{},gpuKey,costs,missing,
+      shipping:defShip,fee_rate:feeRate,
+      parseError:(!parts&&lastAPIError)?lastAPIError:''
+    });
     if(i<targetRows.length-1)await new Promise(r=>setTimeout(r,400));
   }
 
   sales=[...sales,...newSales];saveS();
   $('aiProg').style.display='none';$('aiRes').style.display='block';
   $('b1').textContent=sales.length;
-  let mc=0;newSales.forEach(s=>mc+=(s.missing||[]).length);
+  let mc=newSales.reduce((s,x)=>(x.missing||[]).length+s,0);
   let errCnt=newSales.filter(s=>s.parseError).length;
   $('b2').textContent=mc;
   $('aiSt').innerHTML=`<h4>${newSales.length}件の解析完了</h4>`
-    +(errCnt>0?`<p class="red" style="font-weight:700">⚠ ${errCnt}件でAPI解析失敗（APIキー・モデルを確認してください）</p>`:'')
-    +(mc>0?`<p>${mc}件の未設定パーツあり</p>`:'<p>全パーツ設定済み</p>');
+    +(errCnt>0?`<p class="red" style="font-weight:700">⚠ ${errCnt}件でAPI解析失敗</p>`:'')
+    +(mc>0?`<p>${mc}件の未登録GPUあり</p>`:'<p class="grn">全GPUマッチ済み</p>');
 
-  // Show first error detail if any
   if(errCnt>0){
-    const firstErr=newSales.find(s=>s.parseError);
-    $('aiSt').innerHTML+=`<div class="al al-e mt8"><h4>最初のエラー詳細</h4><p>${esc(firstErr.parseError)}</p><p style="margin-top:4px">「API接続テスト」ボタンでモデルが使えるか確認してください</p></div>`;
+    const fe=newSales.find(s=>s.parseError);
+    $('aiSt').innerHTML+=`<div class="al al-e mt8"><h4>エラー詳細</h4><p>${esc(fe.parseError)}</p></div>`;
   }
 
+  // Result list
   let html='';
   newSales.forEach(s=>{
-    const gpu=s.parts?.gpu||'—',cpu=s.parts?.cpu||'—';
-    const fs=s.parts?.is_fullset?'フルセット':'本体のみ';
-    const hm=(s.missing||[]).length>0;
+    const gpu=s.parts?.gpu||'—';const cpu=s.parts?.cpu||'—';
+    const gk=s.gpuKey||'不明';
     const hasErr=!!s.parseError;
+    const hm=(s.missing||[]).length>0;
     html+=`<div class="sr" ${hasErr?'style="border-left:3px solid #c44"':hm?'style="border-left:3px solid #e6a800"':''}>
       <div class="sr-h"><div class="sr-nm"><div class="sr-nm-t">${esc(s.product_name||'—')}</div>
-      <div class="sr-nm-s">${hasErr?'<span class="red">解析失敗</span>':gpu+' / '+cpu+' / '+fs}</div></div>
+      <div class="sr-nm-s">${hasErr?'<span class="red">解析失敗</span>':gpu+' / '+cpu+' / GPU: '+gk}</div></div>
       <div class="sr-n"><div><div class="sr-nl">売値</div><div class="sr-nv">¥${(s.sale_price||0).toLocaleString()}</div></div>
-      ${hasErr?'<span class="tag tag-m">エラー</span>':hm?'<span class="tag tag-m">未設定あり</span>':'<span class="tag tag-o">OK</span>'}</div></div></div>`;
+      <div><div class="sr-nl">原価</div><div class="sr-nv">¥${totalCost(s.costs).toLocaleString()}</div></div>
+      ${hasErr?'<span class="tag tag-m">エラー</span>':hm?'<span class="tag tag-m">GPU未登録</span>':'<span class="tag tag-g">OK</span>'}</div></div></div>`;
   });
-  $('aiItems').innerHTML=html;
-}
-
-function findMatch(name,cat){
-  if(!name)return null;const pn=name.toLowerCase().trim();
-  for(const[n,d]of Object.entries(master)){if(d.category===cat&&n.toLowerCase().trim()===pn)return n}
-  for(const[n,d]of Object.entries(master)){if(d.category===cat){const mn=n.toLowerCase().trim();if(pn.includes(mn)||mn.includes(pn))return n}}
-  return null;
+  $('aiList').innerHTML=html;
 }
 
 // ================================================================
-// Missing Parts
+// Missing Parts (GPU未登録)
 // ================================================================
-function renderMiss(){
-  const all={};
-  sales.forEach(s=>(s.missing||[]).forEach(m=>{const k=m.cat+'::'+m.name;if(!all[k])all[k]={cat:m.cat,name:m.name,cnt:0};all[k].cnt++}));
-  const ks=Object.keys(all);$('b2').textContent=ks.length;
-  if(!ks.length){$('missAl').style.display='none';$('missList').innerHTML='';$('missNone').style.display='block';return}
-  $('missNone').style.display='none';$('missAl').style.display='block';
-  $('missAl').innerHTML=`<h4>${ks.length}種類のパーツが未設定</h4><p>原価を入力してください。保存するとマスターに登録されます。</p>`;
-  const lb={cpu:'CPU',ram:'RAM',mb:'マザボ',gpu:'GPU',ssd:'SSD',hdd:'HDD',psu:'電源',monitor:'モニター',keyboard:'キーボード',case_name:'ケース',option:'オプション'};
-  let html='<div class="cd">';
-  ks.forEach((k,i)=>{const m=all[k];
-    html+=`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;${i?'border-top:1px solid #eee':''}">
-      <span class="tag tag-m" style="min-width:60px;text-align:center">${lb[m.cat]||m.cat}</span>
-      <span style="flex:2;font-size:13px">${esc(m.name)}</span>
-      <span style="font-size:11px;color:#888">×${m.cnt}</span>
-      <input type="number" class="mp" data-k="${k}" data-c="${m.cat}" data-n="${m.name}" placeholder="¥" style="width:110px">
+function renderMissing(){
+  const miss=sales.filter(s=>(s.missing||[]).length>0);
+  $('b2').textContent=miss.length;
+  if(!miss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録GPUなし</h4></div>';return}
+  let html='';
+  miss.forEach(s=>{
+    html+=`<div class="cd"><div class="cd-t">${esc(s.product_name)}</div>`;
+    s.missing.forEach(m=>{
+      html+=`<div class="row mb12"><div><label>${m.cat}: ${esc(m.name)}</label><p style="font-size:11px;color:#888">${m.note||''}</p></div></div>`;
+    });
+    html+=`</div>`;
+  });
+  $('missWrap').innerHTML=html;
+}
+function applyMissing(){saveS()}
+
+// ================================================================
+// Sales Rendering
+// ================================================================
+function renderSales(){
+  let totalSale=0,totalProfit=0,totalTax=0,cnt=0;
+  let html='';
+  sales.forEach((s,idx)=>{
+    const p=calcProfit(s);
+    totalSale+=s.sale_price;totalProfit+=p.profit;totalTax+=p.tax;cnt++;
+    const pRate=(p.profitRate*100).toFixed(1);
+
+    const costParts=[
+      ['GPU',s.parts?.gpu||s.gpuKey||'—',s.costs?.gpu],
+      ['CPU',s.parts?.cpu||'ベース',s.costs?.cpu],
+      ['MB','A520',s.costs?.mb],
+      ['RAM',s.parts?.ram||'16GB',s.costs?.ram],
+      ['SSD',s.parts?.ssd||'512GB',s.costs?.ssd],
+      ['ケース',s.parts?.case_name||'標準',s.costs?.cas],
+      ['電源','—',s.costs?.psu],
+      ['クーラー','—',s.costs?.cool],
+      ['モニター',s.parts?.monitor||'なし',s.costs?.monitor],
+      ['KB+マウス',s.parts?.keyboard||'なし',s.costs?.keyboard],
+      ['オプション',s.parts?.option||'なし',s.costs?.option],
+    ];
+
+    html+=`<div class="sr">
+      <div class="sr-h" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        <div class="sr-nm">
+          <div class="sr-nm-t">${esc(s.product_name||'—')}</div>
+          <div class="sr-nm-s">${esc(s.gpuKey||'—')} / ${esc(s.parts?.cpu||'—')} / ${s.parts?.is_fullset?'フルセット':'本体のみ'}</div>
+        </div>
+        <div class="sr-n">
+          <div><div class="sr-nl">売値</div><div class="sr-nv">¥${s.sale_price.toLocaleString()}</div></div>
+          <div><div class="sr-nl">原価</div><div class="sr-nv">¥${p.costTotal.toLocaleString()}</div></div>
+          <div><div class="sr-nl">利益</div><div class="sr-nv grn">¥${p.profit.toLocaleString()}</div></div>
+          <div><div class="sr-nl">利益率</div><div class="sr-nv">${pRate}%</div></div>
+          <div style="cursor:pointer;font-size:16px;color:#888">▼</div>
+        </div>
+      </div>
+      <div class="sr-d" style="display:none">
+        <div class="pg">`;
+    costParts.forEach(([label,name,cost])=>{
+      html+=`<div class="pc"><div class="pc-l">${label}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><div class="mono" style="font-size:11px">¥${(cost||0).toLocaleString()}</div></div>`;
+    });
+    html+=`</div>
+        <div class="mt8" style="font-size:11px;color:#888">手数料: ¥${p.fee.toLocaleString()} / 送料: ¥${s.shipping.toLocaleString()} / 消費税: ¥${p.tax.toLocaleString()}</div>
+        <details class="mt8"><summary style="font-size:11px;color:#888;cursor:pointer">説明文</summary><pre style="font-size:10px;color:#666;white-space:pre-wrap;max-height:200px;overflow-y:auto;margin-top:6px">${esc((s.description||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,''))}</pre></details>
+        <div class="mt8"><button class="btn btn-d" style="padding:4px 12px;font-size:11px" onclick="sales.splice(${idx},1);saveS();renderSales()">削除</button></div>
+      </div>
     </div>`;
   });
-  html+='</div>';$('missList').innerHTML=html;
-}
 
-function applyMiss(){
-  const ups={};
-  document.querySelectorAll('.mp').forEach(inp=>{
-    const v=parseInt(inp.value);if(!isNaN(v)&&v>=0)ups[inp.dataset.k]={cat:inp.dataset.c,name:inp.dataset.n,price:v};
-  });
-  for(const d of Object.values(ups))master[d.name]={category:d.cat,price:d.price};
-  saveM();
-  sales.forEach(s=>{
-    (s.missing||[]).forEach(m=>{const k=m.cat+'::'+m.name;if(ups[k])s.costs[m.cat]=ups[k].price});
-    s.missing=(s.missing||[]).filter(m=>!ups[m.cat+'::'+m.name]);
-  });saveS();
-  renderMiss();if(Object.keys(ups).length)go(3);
+  $('salesList').innerHTML=html;
+  $('s1').textContent='¥'+totalSale.toLocaleString();
+  $('s2').textContent='¥'+totalProfit.toLocaleString();
+  $('s3').textContent=cnt>0?((totalProfit/totalSale*100).toFixed(1)+'%'):'0%';
+  $('s4').textContent='¥'+totalTax.toLocaleString();
+  $('b1').textContent=sales.length;
 }
 
 // ================================================================
-// Sales & Stats
-// ================================================================
-function calcProfit(s){
-  const tc=Object.values(s.costs||{}).reduce((a,b)=>a+(b||0),0);
-  const rate=s.fee_rate||0.10;
-  const fee=Math.floor((s.sale_price||0)*rate);
-  const ship=s.shipping||1500;
-  const tax=calcTax(s.sale_price||0,tc,fee,ship);
-  return{tc,fee,ship,tax,profit:(s.sale_price||0)-tc-fee-ship-tax,rate};
-}
-
-function renderSales(){
-  let tS=0,tP=0,cnt=sales.length,tTx=0;
-  sales.forEach(s=>{const c=calcProfit(s);tS+=s.sale_price||0;tP+=c.profit;tTx+=c.tax});
-  const txMode=$('taxMode').value;
-  $('stArea').innerHTML=`
-    <div class="st"><div class="st-l">総売上</div><div class="st-v">¥${tS.toLocaleString()}</div></div>
-    <div class="st"><div class="st-l">総利益${txMode!=='off'?' (税引後)':''}</div><div class="st-v ${tP>=0?'grn':'red'}">¥${tP.toLocaleString()}</div></div>
-    <div class="st"><div class="st-l">平均利益率</div><div class="st-v">${tS?(tP/tS*100).toFixed(1):'0'}%</div></div>
-    <div class="st"><div class="st-l">${txMode!=='off'?'消費税合計':'台数'}</div><div class="st-v">${txMode!=='off'?'¥'+tTx.toLocaleString():cnt}</div></div>`;
-  let html='';
-  sales.forEach(s=>{
-    const c=calcProfit(s);const pr=c.profit;const rt=s.sale_price?(pr/s.sale_price*100):0;
-    const pCl=pr>=40000?'grn':pr>=0?'':'red';
-    const rCl=rt>=30?'grn':rt>=20?'ylw':'red';
-    const gpu=s.parts?.gpu||'—',cpu=s.parts?.cpu||'—';
-    const fs=s.parts?.is_fullset?'フルセット':'本体のみ';
-    html+=`<div class="sr"><div class="sr-h" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
-      <div class="sr-nm"><div class="sr-nm-t">${esc(s.product_name||'—')}</div>
-      <div class="sr-nm-s">${gpu} / ${cpu} / ${fs} / ${s.date||''}</div></div>
-      <div class="sr-n">
-        <div><div class="sr-nl">売値</div><div class="sr-nv">¥${(s.sale_price||0).toLocaleString()}</div></div>
-        <div><div class="sr-nl">原価</div><div class="sr-nv">¥${c.tc.toLocaleString()}</div></div>
-        <div><div class="sr-nl">利益</div><div class="sr-nv ${pCl}">¥${pr.toLocaleString()}</div></div>
-        <div><div class="sr-nl">利益率</div><div class="sr-nv ${rCl}">${rt.toFixed(1)}%</div></div>
-        <span style="color:#aaa;font-size:11px">▼</span>
-      </div></div>
-      <div class="sr-d" style="display:none">
-        <div class="pg">${renderPC(s)}</div>
-        <div class="mt8" style="font-size:11px;color:#888">手数料: ¥${c.fee.toLocaleString()} / 送料: ¥${c.ship.toLocaleString()} / 手数料率: ${((s.fee_rate||0.10)*100).toFixed(1)}%${c.tax?' / 消費税: ¥'+c.tax.toLocaleString():''}</div>
-        ${s.description?`<details class="mt8"><summary style="font-size:11px;color:#888;cursor:pointer">説明文</summary><div style="padding:8px;background:#f8f8f3;font-size:11px;color:#666;line-height:1.6;max-height:140px;overflow-y:auto;margin-top:4px;white-space:pre-wrap;border:1px solid #eee">${esc(s.description.substring(0,500))}</div></details>`:''}
-        <button class="btn btn-d mt8" style="padding:4px 12px;font-size:10px" onclick="delSale(${s.id})">削除</button>
-      </div></div>`;
-  });
-  $('salesList').innerHTML=html||'<div style="text-align:center;padding:40px;color:#888">データなし — CSV取込からスタート</div>';
-}
-
-function renderPC(s){
-  const ps=[['cpu','CPU'],['ram','RAM'],['mb','MB'],['gpu','GPU'],['ssd','SSD'],['hdd','HDD'],['psu','電源'],['monitor','モニター'],['keyboard','KB'],['case_name','ケース'],['option','OP']];
-  return ps.map(([k,l])=>{
-    const nm=s.parts?.[k]||'';const cost=s.costs?.[k]||0;const miss=nm&&cost===0;
-    return`<div class="pc ${miss?'miss':''}"><div class="pc-l">${l}</div><div class="pc-n">${esc(nm)||'—'}</div>
-      <div class="mono" style="font-size:11px;color:${miss?'#c44':'#888'}">${miss?'未設定':'¥'+cost.toLocaleString()}</div></div>`;
-  }).join('');
-}
-
-function delSale(id){sales=sales.filter(s=>s.id!==id);saveS();renderSales()}
-
-// ================================================================
-// Excel出力
+// Excel Export
 // ================================================================
 function toExcel(){
-  if(!sales.length){alert('データがありません');return}
-  const hd=['商品名','CPU','RAM','MB','GPU','SSD','HDD','電源','モニター','キーボード','ケース','オプション','本体合計','売値','手数料率','手数料','送料','消費税','利益','利益率','フルセット','状態','日にち','説明文'];
-  const rows=sales.map(s=>{
-    const c=calcProfit(s);const p=s.parts||{};
-    return[
-      s.product_name||'',p.cpu||'',p.ram||'',p.mb||'',p.gpu||'',p.ssd||'',p.hdd||'',
-      p.psu||'',p.monitor||'',p.keyboard||'',p.case_name||'',p.option||'',
-      c.tc,s.sale_price||0,(s.fee_rate||0.10),c.fee,c.ship,c.tax,c.profit,
-      s.sale_price?c.profit/s.sale_price:0,
-      p.is_fullset?'◯':'×',p.condition||'',s.date||'',(s.description||'').substring(0,200)
-    ];
+  if(!sales.length){alert('データなし');return}
+  const hd=['商品名','GPU型番','GPU','CPU','MB','RAM','SSD','ケース','電源','クーラー','モニター','KB+マウス','オプション',
+    'GPU原価','CPU原価','MB原価','RAM原価','SSD原価','ケース原価','電源原価','クーラー原価','モニター原価','KB+マウス原価','OP原価',
+    '本体合計','売値','手数料率','手数料','送料','消費税','利益','利益率','フルセット','状態','日にち'];
+  const rows=[hd];
+  sales.forEach(s=>{
+    const p=calcProfit(s);
+    const c=s.costs||{};
+    rows.push([
+      s.product_name,s.gpuKey||'',s.parts?.gpu||'',s.parts?.cpu||'','A520',s.parts?.ram||'',s.parts?.ssd||'',s.parts?.case_name||'',
+      '','',s.parts?.monitor||'',s.parts?.keyboard||'',s.parts?.option||'',
+      c.gpu||0,c.cpu||0,c.mb||0,c.ram||0,c.ssd||0,c.cas||0,c.psu||0,c.cool||0,c.monitor||0,c.keyboard||0,c.option||0,
+      p.costTotal,s.sale_price,s.fee_rate,p.fee,s.shipping,p.tax,p.profit,(p.profitRate*100).toFixed(1)+'%',
+      s.parts?.is_fullset?'○':'×',s.parts?.condition||'',s.date||''
+    ]);
   });
-
-  const ws=XLSX.utils.aoa_to_sheet([hd,...rows]);
-  // 利益率フォーマット
-  for(let i=0;i<rows.length;i++){
-    const r=i+2;
-    const cellO=XLSX.utils.encode_cell({r:r-1,c:14});// 手数料率
-    const cellR=XLSX.utils.encode_cell({r:r-1,c:19});// 利益率
-    if(ws[cellO])ws[cellO].z='0.0%';
-    if(ws[cellR])ws[cellR].z='0.0%';
-  }
-  ws['!cols']=[{wch:40},{wch:16},{wch:12},{wch:12},{wch:16},{wch:14},{wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:16},{wch:12},{wch:12},{wch:8},{wch:12},{wch:10},{wch:12},{wch:12},{wch:10},{wch:8},{wch:12},{wch:12},{wch:40}];
-
-  // サマリー
-  let tS=0,tP=0,tTx=0;sales.forEach(s=>{const c=calcProfit(s);tS+=s.sale_price||0;tP+=c.profit;tTx+=c.tax});
-  const sm=[['項目','値'],['販売数',sales.length],['総売上',tS],['総利益',tP],['消費税合計',tTx],['平均利益率',tS?tP/tS:0],['平均利益/台',sales.length?Math.floor(tP/sales.length):0]];
-  const ws2=XLSX.utils.aoa_to_sheet(sm);
-  ws2['!cols']=[{wch:20},{wch:16}];
-
-  // マスター
-  const mhd=[['パーツ名','カテゴリ','原価']];
-  Object.entries(master).forEach(([n,d])=>mhd.push([n,d.category||'',d.price||0]));
-  const ws3=XLSX.utils.aoa_to_sheet(mhd);
-  ws3['!cols']=[{wch:30},{wch:15},{wch:12}];
-
+  const ws=XLSX.utils.aoa_to_sheet(rows);
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'売上利益一覧');
-  XLSX.utils.book_append_sheet(wb,ws2,'サマリー');
-  XLSX.utils.book_append_sheet(wb,ws3,'パーツマスター');
-  XLSX.writeFile(wb,`TITAN_利益計算_${new Date().toISOString().slice(0,10)}.xlsx`);
+
+  // GPUテーブルシート
+  const gt=[['GPU型番','グラボ','CPU','MB','RAM','SSD','ケース','電源','クーラー','合計']];
+  for(const[k,v]of Object.entries(gpuTable)){
+    const t=v.gpu+v.cpu+v.mb+v.ram+v.ssd+v.cas+v.psu+v.cool;
+    gt.push([k,v.gpu,v.cpu,v.mb,v.ram,v.ssd,v.cas,v.psu,v.cool,t]);
+  }
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(gt),'GPUテーブル');
+
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([
+    ['総売上','総利益','消費税合計','件数'],
+    [sales.reduce((s,x)=>s+x.sale_price,0),sales.reduce((s,x)=>s+calcProfit(x).profit,0),sales.reduce((s,x)=>s+calcProfit(x).tax,0),sales.length]
+  ]),'サマリー');
+
+  XLSX.writeFile(wb,`TITAN_利益_${new Date().toISOString().slice(0,10)}.xlsx`);
 }
 
 // ================================================================
 // Init
 // ================================================================
-loadLS();
+// Init
+loadAllTables();
+loadS();
 loadSettings();
+renderGpuTable();
+renderAllPartTables();
 $('b1').textContent=sales.length;
 </script>
 </body>
