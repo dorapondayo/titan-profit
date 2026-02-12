@@ -469,8 +469,9 @@ function loadAllTables(){
 function matchGpu(gpuName){
   if(!gpuName)return null;
   const n=gpuName.toUpperCase().replace(/\s+/g,'').replace(/GEFORCE/i,'').replace(/RADEON/i,'').trim();
-  // Exact match first
-  for(const k of Object.keys(gpuTable)){
+  // Sort by key length descending to match longest first (RTX4060Ti before RTX4060)
+  const keys=Object.keys(gpuTable).sort((a,b)=>b.length-a.length);
+  for(const k of keys){
     if(n.includes(k.toUpperCase().replace(/\s+/g,'')))return k;
   }
   return null;
@@ -495,8 +496,10 @@ function calcOptionCost(optionStr){
 function getCpuCost(cpuName,baseCost){
   if(!cpuName)return baseCost;
   const n=cpuName.toUpperCase().replace(/RYZEN\s*(7|9|5)\s*/i,'').replace(/CORE\s*I\d\s*/i,'').trim();
-  for(const[k,v]of Object.entries(optPrices.cpu||{})){
-    if(n.includes(k.toUpperCase()))return v;
+  // Sort by key length descending (7700X before 7700)
+  const keys=Object.keys(optPrices.cpu||{}).sort((a,b)=>b.length-a.length);
+  for(const k of keys){
+    if(n.includes(k.toUpperCase()))return optPrices.cpu[k];
   }
   return baseCost;
 }
