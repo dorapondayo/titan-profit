@@ -283,11 +283,22 @@ tr:hover td{background:#fafaf5}
 
     <div class="cd">
       <div class="cd-t">引き継ぎ</div>
-      <div class="fx">
-        <button class="btn btn-s" onclick="exportJSON()">データ書出し</button>
-        <button class="btn btn-s" onclick="$('impF').click()">データ読込</button>
+      <p style="font-size:11px;color:#888;margin-bottom:10px">※localStorageはHTML更新では消えません。別端末に移行する場合はファイル書出しを使ってください。</p>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">原価テーブル設定（GPU・CPU・RAM・SSD・オプション・周辺機器）</div>
+      <div class="fx mb12">
+        <button class="btn btn-s" onclick="exportTables()">テーブル書出し</button>
+        <button class="btn btn-s" onclick="$('impTblF').click()">テーブル読込</button>
+        <input type="file" id="impTblF" accept=".json" hidden onchange="importTables(event)">
+      </div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">全データ（テーブル＋売上＋API設定）</div>
+      <div class="fx mb12">
+        <button class="btn btn-s" onclick="exportJSON()">全データ書出し</button>
+        <button class="btn btn-s" onclick="$('impF').click()">全データ読込</button>
         <input type="file" id="impF" accept=".json" hidden onchange="importJSON(event)">
-        <button class="btn btn-d" onclick="if(confirm('全データを削除しますか？'))clearAll()">全削除</button>
+      </div>
+      <div class="fx">
+        <button class="btn btn-d" onclick="if(confirm('売上データのみ削除しますか？'))clearSales()">売上のみ削除</button>
+        <button class="btn btn-d" onclick="if(confirm('全データ（テーブル含む）を削除しますか？'))clearAll()">全削除</button>
       </div>
     </div>
 
@@ -600,21 +611,36 @@ function taxModeChange(){
 function saveS(){localStorage.setItem(LS_SALES,JSON.stringify(sales))}
 function loadS(){try{sales=JSON.parse(localStorage.getItem(LS_SALES))||[]}catch{sales=[]}}
 function clearAll(){sales=[];saveS();localStorage.removeItem(LS_GPU);localStorage.removeItem(LS_OPT);localStorage.removeItem('titan_fixed_v2');gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));fixedPrices={...DEFAULT_FIXED};renderGpuTable();renderAllPartTables();$('fixKb').value=1500;$('fixMouse').value=1000;$('fixMon').value=3000;$('fixMon144').value=8000;renderSales();$('b1').textContent=0;$('b2').textContent=0}
+function clearSales(){sales=[];saveS();renderSales();$('b1').textContent=0;$('b2').textContent=0}
 function exportJSON(){
-  const d={gpuTable,optPrices,fixedPrices,sales,settings:JSON.parse(localStorage.getItem(LS_CFG)||'{}'),exported:new Date().toISOString()};
+  const d={type:'full',gpuTable,optPrices,fixedPrices,sales,settings:JSON.parse(localStorage.getItem(LS_CFG)||'{}'),exported:new Date().toISOString()};
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_${new Date().toISOString().slice(0,10)}.json`;a.click();
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_full_${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function exportTables(){
+  const d={type:'tables',gpuTable,optPrices,fixedPrices,exported:new Date().toISOString()};
+  const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_tables_${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function importTables(e){
+  const f=e.target.files[0];if(!f)return;const r=new FileReader();
+  r.onload=()=>{try{const d=JSON.parse(r.result);
+    if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
+    if(d.optPrices){optPrices=d.optPrices;localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
+    if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
+    alert('テーブル読込完了');}catch(e){alert('エラー: '+e.message)}};
+  r.readAsText(f);e.target.value='';
 }
 function importJSON(e){
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);
     if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
     if(d.optPrices){optPrices=d.optPrices;localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
-    if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard;$('fixMouse').value=fixedPrices.mouse;$('fixMon').value=fixedPrices.monitor}
+    if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
     if(d.sales){sales=d.sales;saveS()}
     if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
     renderSales();alert('読込完了');}catch(e){alert('エラー: '+e.message)}};
-  r.readAsText(f);
+  r.readAsText(f);e.target.value='';
 }
 
 // ================================================================
