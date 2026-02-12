@@ -133,17 +133,21 @@ tr:hover td{background:#fafaf5}
   <!-- ======== 0: 設定 & CSV ======== -->
   <div class="pnl on" id="p0">
     <div class="cd">
-      <div class="cd-t">API設定</div>
+      <div class="cd-t">API設定 <button class="btn btn-s" onclick="saveSettings()" style="padding:3px 10px;font-size:10px;float:right">設定を保存</button></div>
       <div class="row">
         <div style="flex:3"><label>OpenAI API Key</label><input type="password" id="apiKey" placeholder="sk-..."></div>
         <div style="flex:1"><label>Model</label>
           <select id="mdl">
-            <option value="gpt-5-mini">GPT-5 mini（推奨）</option>
             <option value="gpt-4.1-mini">GPT-4.1 mini</option>
-            <option value="gpt-4.1-nano">GPT-4.1 nano</option>
             <option value="gpt-4o-mini">GPT-4o mini</option>
+            <option value="gpt-5-mini">GPT-5 mini</option>
+            <option value="gpt-4.1-nano">GPT-4.1 nano</option>
           </select>
         </div>
+      </div>
+      <div class="mt8">
+        <button class="btn btn-s" onclick="testAPI()" style="padding:6px 14px;font-size:11px">API接続テスト</button>
+        <span id="apiTestResult" style="margin-left:10px;font-size:12px"></span>
       </div>
       <div class="mt8 row">
         <div><label>送料デフォルト ¥</label><input type="number" id="defShip" value="1500" style="width:140px"></div>
@@ -281,6 +285,37 @@ function go(n){
 }
 
 // ================================================================
+// Settings save/load
+// ================================================================
+const LS_CFG='titan_cfg_v1';
+function saveSettings(){
+  const cfg={
+    apiKey:$('apiKey').value,
+    model:$('mdl').value,
+    defShip:$('defShip').value,
+    feeRate:$('feeRate').value,
+    taxMode:$('taxMode').value,
+    taxSimpleCat:$('taxSimpleCat').value,
+    taxInputRate:$('taxInputRate').value
+  };
+  localStorage.setItem(LS_CFG,JSON.stringify(cfg));
+  alert('設定を保存しました');
+}
+function loadSettings(){
+  try{
+    const cfg=JSON.parse(localStorage.getItem(LS_CFG));
+    if(!cfg)return;
+    if(cfg.apiKey)$('apiKey').value=cfg.apiKey;
+    if(cfg.model)$('mdl').value=cfg.model;
+    if(cfg.defShip)$('defShip').value=cfg.defShip;
+    if(cfg.feeRate)$('feeRate').value=cfg.feeRate;
+    if(cfg.taxMode){$('taxMode').value=cfg.taxMode;taxModeChange()}
+    if(cfg.taxSimpleCat)$('taxSimpleCat').value=cfg.taxSimpleCat;
+    if(cfg.taxInputRate)$('taxInputRate').value=cfg.taxInputRate;
+  }catch{}
+}
+
+// ================================================================
 // Storage
 // ================================================================
 function loadLS(){
@@ -294,7 +329,8 @@ function saveS(){localStorage.setItem(LS_S,JSON.stringify(sales))}
 // 引き継ぎ Export / Import
 // ================================================================
 function exportJSON(){
-  const d={master,sales,exported:new Date().toISOString()};
+  const cfg={apiKey:$('apiKey').value,model:$('mdl').value,defShip:$('defShip').value,feeRate:$('feeRate').value,taxMode:$('taxMode').value,taxSimpleCat:$('taxSimpleCat').value,taxInputRate:$('taxInputRate').value};
+  const d={master,sales,settings:cfg,exported:new Date().toISOString()};
   const blob=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
@@ -309,6 +345,7 @@ function importJSON(e){
       const d=JSON.parse(ev.target.result);
       if(d.master)master=d.master;
       if(d.sales)sales=d.sales;
+      if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
       saveM();saveS();
       alert(`復元完了: パーツ${Object.keys(master).length}件, 売上${sales.length}件`);
       $('b1').textContent=sales.length;
@@ -393,12 +430,27 @@ function calcTax(sp,tc,fee,ship){
 }
 
 // ================================================================
-// OpenAI API (ブラウザ直接)
+// OpenAI API
 // ================================================================
-async function callGPT(name,desc,key,model){
-  // <br>を改行に変換
-  const cleanDesc=(desc||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,'');
+async function testAPI(){
+  const key=$('apiKey').value.trim();const model=$('mdl').value;const el=$('apiTestResult');
+  if(!key){el.innerHTML='<span class="red">APIキーを入力</span>';return}
+  el.innerHTML='テスト中...';
+  try{
+    const resp=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'user',content:'Reply OK'}],max_tokens:10})
+    });
+    const data=await resp.json();
+    if(data.error){el.innerHTML=`<span class="red">エラー: ${data.error.message}</span>`;return}
+    if(data.choices?.[0]){el.innerHTML=`<span class="grn">接続OK (${model})</span>`}
+    else{el.innerHTML=`<span class="red">不明レスポンス: ${JSON.stringify(data).substring(0,100)}</span>`}
+  }catch(e){el.innerHTML=`<span class="red">通信エラー: ${e.message}</span>`}
+}
 
+let lastAPIError='';
+async function callGPT(name,desc,key,model){
+  const cleanDesc=(desc||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,'').trim();
   const prompt=`以下のメルカリPC出品を解析してJSONで返せ。
 
 商品名: ${name||'不明'}
@@ -406,34 +458,36 @@ async function callGPT(name,desc,key,model){
 ${cleanDesc.substring(0,1500)}
 
 【重要ルール】
-- 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、それが最優先。
-  例: 「Ryzen 7 5700X に変更」→ CPUはRyzen 7 5700X
-  例: 「SSD 1TB に変更」→ SSDは1TB
-  例: 「メモリ DDR4 32GB」→ RAMはDDR4 32GB
-  例: 「①7700X に変更 ②SSD 1TB」→ CPUは7700X、SSDは1TB
-- オプションで記載されたパーツは、説明文の後半に書いてあるベースPC構成より優先
-- 「〜抜き」は除外を意味する（例:「キーボード抜き」→ keyboard=null）
-- 「単品」=本体のみ、周辺機器なし
-- 「CPU無し」→ cpu=null
-- ケース名は商品名末尾やスペック欄から判別(H17,PIRAWH,DS900WH,DS900BK,T4,CXWH等)
-- 「水冷」「液晶水冷」はoptionに含める
-- 「WiFi」「Bluetooth」「内蔵Wi-Fi」はoptionに含める
+- 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、それが最優先
+  例:「Ryzen 7 5700X に変更」→CPUはRyzen 7 5700X
+  例:「SSD 1TB に変更」→SSDは1TB
+  例:「①7700X に変更 ②SSD 1TB」→CPUは7700X、SSDは1TB
+- オプション記載パーツは後半のベース構成より優先
+- 「〜抜き」は除外（キーボード抜き→keyboard=null）
+- 「単品」=本体のみ
+- ケース名は商品名やスペックから判別
+- 水冷,WiFi,Bluetooth等はoptionに含める
 
-JSON形式で返せ。不明はnull:
-{"cpu":"CPU名","ram":"メモリ(容量と規格)","mb":"マザボ","gpu":"GPU名","ssd":"SSD(容量)","hdd":"HDD(なければnull)","psu":"電源","monitor":"モニター(なければnull)","keyboard":"キーボード(なければnull)","case_name":"ケース名","option":"オプション(水冷,WiFi等カンマ区切り。なければnull)","is_fullset":true/false,"is_gaming_pc":true/false,"condition":"新品パーツ/中古/リファービッシュ"}
+JSON(不明はnull):
+{"cpu":"Ryzen 7 5700X","ram":"DDR4 16GB","mb":"B550","gpu":"RTX3080","ssd":"512GB NVMe","hdd":null,"psu":"650W","monitor":"24インチ","keyboard":"セット","case_name":"H17","option":"水冷,WiFi","is_fullset":true,"condition":"リファービッシュ"}
 
-JSONのみ返せ。`;
+JSONのみ。`;
 
-  const resp=await fetch('https://api.openai.com/v1/chat/completions',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
-    body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_tokens:500})
-  });
-  const data=await resp.json();
-  if(data.error)throw new Error(data.error.message);
-  let txt=data.choices[0].message.content.trim();
-  txt=txt.replace(/^```json\s*/,'').replace(/\s*```$/,'');
-  return JSON.parse(txt);
+  try{
+    const resp=await fetch('https://api.openai.com/v1/chat/completions',{
+      method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+key},
+      body:JSON.stringify({model,messages:[{role:'user',content:prompt}],temperature:0.1,max_tokens:600})
+    });
+    const data=await resp.json();
+    if(data.error){lastAPIError=data.error.message;console.error('API:',data.error);return null}
+    const txt=data.choices?.[0]?.message?.content||'';
+    if(!txt){lastAPIError='Empty response: '+JSON.stringify(data).substring(0,200);return null}
+    let j=txt.trim().replace(/^```json\s*/,'').replace(/\s*```$/,'');
+    const fi=j.indexOf('{'),li=j.lastIndexOf('}');
+    if(fi===-1||li===-1){lastAPIError='No JSON: '+j.substring(0,150);return null}
+    j=j.substring(fi,li+1);
+    lastAPIError='';return JSON.parse(j);
+  }catch(e){lastAPIError=e.message;console.error('GPT:',e);return null}
 }
 
 // ================================================================
@@ -471,8 +525,12 @@ async function startAI(){
     $('pTxt').textContent=`${i+1} / ${targetRows.length}`;
     $('pCur').textContent=nm.substring(0,50);
 
-    let parts=null;
-    try{if(nm||ds)parts=await callGPT(nm,ds,key,model)}catch(e){console.error(e)}
+    let parts=null;lastAPIError='';
+    try{if(nm||ds)parts=await callGPT(nm,ds,key,model)}catch(e){lastAPIError=e.message;console.error(e)}
+
+    if(!parts&&lastAPIError){
+      console.warn(`Item ${i+1} failed: ${lastAPIError}`);
+    }
 
     const costs={},miss=[];
     const pks=['cpu','ram','mb','gpu','ssd','hdd','psu','monitor','keyboard','case_name','option'];
@@ -482,7 +540,7 @@ async function startAI(){
         if(v){const m=findMatch(v,pk);if(m){costs[pk]=master[m].price}else{costs[pk]=0;miss.push({cat:pk,name:v})}}else{costs[pk]=0}
       });
     }
-    newSales.push({id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,parts:parts||{},costs,missing:miss,shipping:defShip,fee_rate:feeRate});
+    newSales.push({id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,parts:parts||{},costs,missing:miss,shipping:defShip,fee_rate:feeRate,parseError:(!parts&&lastAPIError)?lastAPIError:''});
     if(i<targetRows.length-1)await new Promise(r=>setTimeout(r,400));
   }
 
@@ -490,19 +548,29 @@ async function startAI(){
   $('aiProg').style.display='none';$('aiRes').style.display='block';
   $('b1').textContent=sales.length;
   let mc=0;newSales.forEach(s=>mc+=(s.missing||[]).length);
+  let errCnt=newSales.filter(s=>s.parseError).length;
   $('b2').textContent=mc;
-  $('aiSt').innerHTML=`<h4>${newSales.length}件の解析完了</h4>`+(mc>0?`<p>${mc}件の未設定パーツあり</p>`:'<p>全パーツ設定済み</p>');
+  $('aiSt').innerHTML=`<h4>${newSales.length}件の解析完了</h4>`
+    +(errCnt>0?`<p class="red" style="font-weight:700">⚠ ${errCnt}件でAPI解析失敗（APIキー・モデルを確認してください）</p>`:'')
+    +(mc>0?`<p>${mc}件の未設定パーツあり</p>`:'<p>全パーツ設定済み</p>');
+
+  // Show first error detail if any
+  if(errCnt>0){
+    const firstErr=newSales.find(s=>s.parseError);
+    $('aiSt').innerHTML+=`<div class="al al-e mt8"><h4>最初のエラー詳細</h4><p>${esc(firstErr.parseError)}</p><p style="margin-top:4px">「API接続テスト」ボタンでモデルが使えるか確認してください</p></div>`;
+  }
 
   let html='';
   newSales.forEach(s=>{
     const gpu=s.parts?.gpu||'—',cpu=s.parts?.cpu||'—';
     const fs=s.parts?.is_fullset?'フルセット':'本体のみ';
     const hm=(s.missing||[]).length>0;
-    html+=`<div class="sr" ${hm?'style="border-left:3px solid #c44"':''}>
+    const hasErr=!!s.parseError;
+    html+=`<div class="sr" ${hasErr?'style="border-left:3px solid #c44"':hm?'style="border-left:3px solid #e6a800"':''}>
       <div class="sr-h"><div class="sr-nm"><div class="sr-nm-t">${esc(s.product_name||'—')}</div>
-      <div class="sr-nm-s">${gpu} / ${cpu} / ${fs}</div></div>
+      <div class="sr-nm-s">${hasErr?'<span class="red">解析失敗</span>':gpu+' / '+cpu+' / '+fs}</div></div>
       <div class="sr-n"><div><div class="sr-nl">売値</div><div class="sr-nv">¥${(s.sale_price||0).toLocaleString()}</div></div>
-      ${hm?'<span class="tag tag-m">未設定あり</span>':'<span class="tag tag-o">OK</span>'}</div></div></div>`;
+      ${hasErr?'<span class="tag tag-m">エラー</span>':hm?'<span class="tag tag-m">未設定あり</span>':'<span class="tag tag-o">OK</span>'}</div></div></div>`;
   });
   $('aiItems').innerHTML=html;
 }
@@ -661,6 +729,7 @@ function toExcel(){
 // Init
 // ================================================================
 loadLS();
+loadSettings();
 $('b1').textContent=sales.length;
 </script>
 </body>
