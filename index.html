@@ -341,7 +341,7 @@ tr:hover td{background:#fafaf5}
   <!-- ===== Panel 2: Missing Parts ===== -->
   <div class="pnl" id="p2">
     <div id="missWrap"></div>
-    <button class="btn btn-p btn-w mt16" onclick="applyMissing();go(3)">適用して売上へ</button>
+    <button class="btn btn-p btn-w mt16" onclick="applyMissing()">適用して売上へ</button>
   </div>
 
   <!-- ===== Panel 3: Sales ===== -->
@@ -395,10 +395,10 @@ const DEFAULT_GPU_TABLE={
 
 // Option upgrade prices (editable)
 const DEFAULT_OPT={
-  cpu:{'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'7700X':25000,'5900X':20000,'9800X3D':50000,'5600X':12000,'5600':10000},
+  cpu:{'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'700X':23000,'7700X':25000,'5900X':40000,'9800X3D':50000,'5600X':12000,'5600':10000},
   ram:{'DDR4 16GB':8000,'DDR4 32GB':12000,'DDR5 16GB':10000,'DDR5 32GB':15000,'DDR5 64GB':25000},
   ssd:{'512GB':7000,'1TB':10000,'2TB':15000},
-  cas:{'新品ケース★':10000,'白ケース':7000,'黒ケース':4000,'新品ケース':7000,'CX200M':7000,'T4 PLUS':4000,'T4':4000,'H17':3500,'PIRAWH':8000,'DS900WH':10000,'DS900BK':10000,'CXWH':7000},
+  cas:{'新品ケース★':10000,'白ケース':7000,'黒ケース':4000,'ブラックのケース':4000,'新品ケース':7000,'CX200M':7000,'T4 PLUS':4000,'T4':4000,'H17':3500,'PIRAWH':8000,'DS900WH':10000,'DS900BK':10000,'CXWH':7000,'湾曲ピーラーレスガラスケース':10000},
   other:{'簡易水冷':5000,'液晶簡易水冷':8000,'120mm空冷クーラー':2000,'内蔵WiFi':2000,'USB WiFi':1000,'内蔵Bluetooth':1000,'USB Bluetooth':500}
 };
 const DEFAULT_FIXED={keyboard:1500,mouse:1000,monitor:3000,monitor144hz:8000};
@@ -476,7 +476,8 @@ function saveAllTables(){
 }
 function loadAllTables(){
   try{const g=JSON.parse(localStorage.getItem(LS_GPU));if(g)gpuTable=g}catch{}
-  try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o){optPrices=o;if(!optPrices.cas)optPrices.cas={...DEFAULT_OPT.cas}}}catch{}
+  try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o)optPrices=o}catch{}
+  ensureSubTables();
   try{const f=JSON.parse(localStorage.getItem('titan_fixed_v2'));if(f){fixedPrices=f;$('fixKb').value=f.keyboard||1500;$('fixMouse').value=f.mouse||1000;$('fixMon').value=f.monitor||3000;$('fixMon144').value=f.monitor144hz||8000}}catch{}
 }
 
@@ -575,10 +576,11 @@ function calcCosts(parts,gpuKey){
 
     // Case: if GPT returned a case name, look up in case table
     if(parts.case_name){
-      const casKeys=Object.keys(optPrices.cas||{}).sort((a,b)=>b.length-a.length);
+      const casTable=optPrices.cas||{};
+      const casKeys=Object.keys(casTable).sort((a,b)=>b.length-a.length);
       let casMatched=false;
       for(const k of casKeys){
-        if(parts.case_name.toLowerCase().includes(k.toLowerCase())){costs.cas=optPrices.cas[k];casMatched=true;break}
+        if(parts.case_name.toLowerCase().includes(k.toLowerCase())){costs.cas=casTable[k];casMatched=true;break}
       }
       if(!casMatched){costs.cas=base.cas;missing.push({cat:'cas',name:parts.case_name,note:'ケーステーブルに未登録'})}
     }else{costs.cas=base.cas}
@@ -672,11 +674,14 @@ function exportTables(){
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_tables_${new Date().toISOString().slice(0,10)}.json`;a.click();
 }
+function ensureSubTables(){
+  ['cpu','ram','ssd','cas','other'].forEach(k=>{if(!optPrices[k])optPrices[k]={...DEFAULT_OPT[k]}});
+}
 function importTables(e){
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);
     if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
-    if(d.optPrices){optPrices=d.optPrices;localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
+    if(d.optPrices){optPrices=d.optPrices;ensureSubTables();localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
     if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
     alert('テーブル読込完了');}catch(e){alert('エラー: '+e.message)}};
   r.readAsText(f);e.target.value='';
@@ -685,7 +690,7 @@ function importJSON(e){
   const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{const d=JSON.parse(r.result);
     if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
-    if(d.optPrices){optPrices=d.optPrices;localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
+    if(d.optPrices){optPrices=d.optPrices;ensureSubTables();localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
     if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
     if(d.sales){sales=d.sales;saveS()}
     if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
@@ -940,8 +945,9 @@ async function startAI(){
 }
 
 // ================================================================
-// Missing Parts (GPU未登録)
+// Missing Parts
 // ================================================================
+let pendingMissing=[];
 function renderMissing(){
   // Collect all unique missing parts across all sales
   const allMiss=[];
@@ -952,38 +958,42 @@ function renderMissing(){
       if(!seen.has(key)){seen.add(key);allMiss.push({...m,key})}
     });
   });
+  pendingMissing=allMiss;
   $('b2').textContent=allMiss.length;
   if(!allMiss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録パーツなし — すべてテーブルにマッチ済み</h4></div>';return}
 
   const catLabels={gpu:'GPU',cpu:'CPU',ram:'RAM',ssd:'SSD',cas:'ケース',option:'オプション'};
-  let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「テーブルに追加して再計算」を押してください</p></div>';
+  let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「適用して売上へ」を押してください</p></div>';
   allMiss.forEach((m,i)=>{
     html+=`<div class="cd" style="padding:14px 20px">
       <div class="row fx-c">
-        <div style="flex:2"><span class="tag tag-m">${catLabels[m.cat]||m.cat}</span> <strong>${esc(m.name)}</strong> <span style="font-size:11px;color:#888">${m.note||''}</span></div>
+        <div style="flex:2"><span class="tag tag-m">${catLabels[m.cat]||m.cat}</span> <strong>${esc(m.name)}</strong> <span style="font-size:11px;color:#888">${esc(m.note||'')}</span></div>
         <div style="flex:1"><label>原価 ¥</label><input type="number" id="missP_${i}" placeholder="原価を入力" style="font-size:14px;padding:8px"></div>
       </div>
     </div>`;
   });
-  html+=`<div id="missData" style="display:none">${JSON.stringify(allMiss)}</div>`;
   $('missWrap').innerHTML=html;
 }
 
 function applyMissing(){
-  const dataEl=$('missData');
-  if(!dataEl)return;
-  const allMiss=JSON.parse(dataEl.textContent);
+  try{
+  if(!pendingMissing.length){go(3);return}
   let added=0;
 
-  allMiss.forEach((m,i)=>{
+  // Safety init
+  if(!optPrices.cpu)optPrices.cpu={};
+  if(!optPrices.ram)optPrices.ram={};
+  if(!optPrices.ssd)optPrices.ssd={};
+  if(!optPrices.cas)optPrices.cas={};
+  if(!optPrices.other)optPrices.other={};
+
+  pendingMissing.forEach((m,i)=>{
     const priceEl=$('missP_'+i);
     if(!priceEl)return;
     const price=parseInt(priceEl.value);
     if(isNaN(price))return;
 
-    // Add to the correct table
     if(m.cat==='cpu'){
-      // Extract short name (e.g., "5900X" from "Ryzen 9 5900X")
       let short=m.name.replace(/ryzen\s*(7|9|5)\s*/i,'').replace(/core\s*i\d\s*/i,'').trim();
       if(!short)short=m.name;
       optPrices.cpu[short]=price;
@@ -992,7 +1002,6 @@ function applyMissing(){
       optPrices.ram[m.name]=price;
       added++;
     } else if(m.cat==='ssd'){
-      // Normalize (e.g., "2TB (Dドライブ) + 1TB" → just add as-is)
       optPrices.ssd[m.name]=price;
       added++;
     } else if(m.cat==='cas'){
@@ -1002,14 +1011,12 @@ function applyMissing(){
       optPrices.other[m.name]=price;
       added++;
     } else if(m.cat==='gpu'){
-      // Add new GPU row with default values
       gpuTable[m.name]={gpu:price,cpu:3500,mb:4000,ram:8000,ssd:7000,cas:7000,psu:700,cool:300};
       added++;
     }
   });
 
   if(added>0){
-    // Save tables
     localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));
     localStorage.setItem(LS_OPT,JSON.stringify(optPrices));
     renderGpuTable();renderAllPartTables();
@@ -1027,6 +1034,7 @@ function applyMissing(){
   }
 
   go(3);
+  }catch(e){alert('適用エラー: '+e.message);console.error(e)}
 }
 
 // ================================================================
