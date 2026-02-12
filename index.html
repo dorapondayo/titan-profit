@@ -221,6 +221,21 @@ tr:hover td{background:#fafaf5}
         </div>
       </details>
 
+      <!-- Case Prices -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ ケース価格</summary>
+        <div class="tw">
+          <table class="tbl-edit"><thead><tr><th>ケース名</th><th>原価 ¥</th><th></th></tr></thead>
+            <tbody id="casTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newCasName" placeholder="名称（例: DS900WH）" style="width:160px">
+          <input type="number" id="newCasPrice" placeholder="原価" style="width:100px">
+          <button class="btn btn-s" onclick="addPartRow('cas')" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+      </details>
+
       <!-- Option Prices -->
       <details class="mt12">
         <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ オプション価格（水冷・WiFi等）</summary>
@@ -383,6 +398,7 @@ const DEFAULT_OPT={
   cpu:{'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'7700X':25000,'5900X':20000,'9800X3D':50000,'5600X':12000,'5600':10000},
   ram:{'DDR4 16GB':8000,'DDR4 32GB':12000,'DDR5 16GB':10000,'DDR5 32GB':15000,'DDR5 64GB':25000},
   ssd:{'512GB':7000,'1TB':10000,'2TB':15000},
+  cas:{'新品ケース★':10000,'白ケース':7000,'黒ケース':4000,'新品ケース':7000,'CX200M':7000,'T4 PLUS':4000,'T4':4000,'H17':3500,'PIRAWH':8000,'DS900WH':10000,'DS900BK':10000,'CXWH':7000},
   other:{'簡易水冷':5000,'液晶簡易水冷':8000,'120mm空冷クーラー':2000,'内蔵WiFi':2000,'USB WiFi':1000,'内蔵Bluetooth':1000,'USB Bluetooth':500}
 };
 const DEFAULT_FIXED={keyboard:1500,mouse:1000,monitor:3000,monitor144hz:8000};
@@ -445,6 +461,7 @@ function renderAllPartTables(){
   renderPartTable('cpu','cpuTbody');
   renderPartTable('ram','ramTbody');
   renderPartTable('ssd','ssdTbody');
+  renderPartTable('cas','casTbody');
   renderPartTable('other','optTbody');
 }
 
@@ -459,7 +476,7 @@ function saveAllTables(){
 }
 function loadAllTables(){
   try{const g=JSON.parse(localStorage.getItem(LS_GPU));if(g)gpuTable=g}catch{}
-  try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o)optPrices=o}catch{}
+  try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o){optPrices=o;if(!optPrices.cas)optPrices.cas={...DEFAULT_OPT.cas}}}catch{}
   try{const f=JSON.parse(localStorage.getItem('titan_fixed_v2'));if(f){fixedPrices=f;$('fixKb').value=f.keyboard||1500;$('fixMouse').value=f.mouse||1000;$('fixMon').value=f.monitor||3000;$('fixMon144').value=f.monitor144hz||8000}}catch{}
 }
 
@@ -556,7 +573,16 @@ function calcCosts(parts,gpuKey){
     costs.ssd=ssdR.cost;
     if(!ssdR.matched&&parts.ssd)missing.push({cat:'ssd',name:parts.ssd,note:'SSDテーブルに未登録'});
 
-    costs.cas=base.cas;
+    // Case: if GPT returned a case name, look up in case table
+    if(parts.case_name){
+      const casKeys=Object.keys(optPrices.cas||{}).sort((a,b)=>b.length-a.length);
+      let casMatched=false;
+      for(const k of casKeys){
+        if(parts.case_name.toLowerCase().includes(k.toLowerCase())){costs.cas=optPrices.cas[k];casMatched=true;break}
+      }
+      if(!casMatched){costs.cas=base.cas;missing.push({cat:'cas',name:parts.case_name,note:'ケーステーブルに未登録'})}
+    }else{costs.cas=base.cas}
+
     costs.psu=base.psu;
     costs.cool=base.cool;
   } else {
@@ -782,7 +808,14 @@ ${cleanDesc.substring(0,1500)}
    - キーボード抜き or マウス抜き or 単品→null
    - 「キーボード・マウス・マウスパッド抜き」→null
    - モニターだけ付きの場合→keyboard=null
-10. ケース名は説明文に具体名がある場合のみ返す。不明ならnull
+10. case_nameの判定ルール（以下の優先順位で判定）:
+   - 説明文に具体的なケース名（CX200M,T4,H17,DS900WH,DS900BK,PIRAWH,CXWH等）があればそれを返す
+   - タイトルが「新品ケースゲーミングPC★」→ "新品ケース★"
+   - タイトルが「【即納激安ホワイトモデル】」→ "白ケース"
+   - タイトルが「【即納激安ブラックモデル】」→ "黒ケース"
+   - タイトルが「新品ケースゲーミングPC」（★なし）→ "新品ケース"
+   - オプションに「ホワイトケース」「ブラックのケース」等あればそちらを優先
+   - 上記いずれにも該当しない場合 → null
 
 JSON形式（不明はnull）:
 {
@@ -922,7 +955,7 @@ function renderMissing(){
   $('b2').textContent=allMiss.length;
   if(!allMiss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録パーツなし — すべてテーブルにマッチ済み</h4></div>';return}
 
-  const catLabels={gpu:'GPU',cpu:'CPU',ram:'RAM',ssd:'SSD',option:'オプション'};
+  const catLabels={gpu:'GPU',cpu:'CPU',ram:'RAM',ssd:'SSD',cas:'ケース',option:'オプション'};
   let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「テーブルに追加して再計算」を押してください</p></div>';
   allMiss.forEach((m,i)=>{
     html+=`<div class="cd" style="padding:14px 20px">
@@ -961,6 +994,9 @@ function applyMissing(){
     } else if(m.cat==='ssd'){
       // Normalize (e.g., "2TB (Dドライブ) + 1TB" → just add as-is)
       optPrices.ssd[m.name]=price;
+      added++;
+    } else if(m.cat==='cas'){
+      optPrices.cas[m.name]=price;
       added++;
     } else if(m.cat==='option'){
       optPrices.other[m.name]=price;
@@ -1036,7 +1072,7 @@ function renderSales(){
         <div class="pg">`;
     const missCats=new Set((s.missing||[]).map(m=>m.cat));
     costParts.forEach(([label,name,cost])=>{
-      const isMiss=(label==='GPU'&&missCats.has('gpu'))||(label==='CPU'&&missCats.has('cpu'))||(label==='RAM'&&missCats.has('ram'))||(label==='SSD'&&missCats.has('ssd'))||(label==='オプション'&&missCats.has('option'));
+      const isMiss=(label==='GPU'&&missCats.has('gpu'))||(label==='CPU'&&missCats.has('cpu'))||(label==='RAM'&&missCats.has('ram'))||(label==='SSD'&&missCats.has('ssd'))||(label==='ケース'&&missCats.has('cas'))||(label==='オプション'&&missCats.has('option'));
       html+=`<div class="pc${isMiss?' miss':''}"><div class="pc-l">${label}${isMiss?' <span class="red">⚠未登録</span>':''}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><div class="mono" style="font-size:11px">¥${(cost||0).toLocaleString()}</div></div>`;
     });
     html+=`</div>
