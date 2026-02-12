@@ -183,9 +183,10 @@ tr:hover td{background:#fafaf5}
 
     <div class="cd">
       <div class="cd-t">CSV取込</div>
+      <div class="al al-w" style="margin-bottom:12px"><h4>注意</h4><p>事務局によって対応された商品は読み取りできません。必ず手動で追加してください。</p></div>
       <div class="drop" id="dz" onclick="$('csvF').click()" ondragover="event.preventDefault();this.classList.add('over')" ondragleave="this.classList.remove('over')" ondrop="onDrop(event)">
         <div class="drop-ic">↑</div>
-        <div class="drop-tx">メルカリCSVをドラッグ＆ドロップ / クリック</div>
+        <div class="drop-tx">メルカリCSVをドラッグ＆ドロップ / クリック<br><span style="font-size:10px;color:#aaa">※Shift-JIS(cp932)で自動読込</span></div>
         <input type="file" id="csvF" accept=".csv" hidden onchange="onFile(event)">
       </div>
       <div id="csvUI" style="display:none">
@@ -196,7 +197,14 @@ tr:hover td{background:#fafaf5}
           <div><label>価格</label><select id="cP"></select></div>
           <div><label>日付</label><select id="cDt"></select></div>
         </div>
+        <div class="row mb12">
+          <div><label>出品状況（フィルタ）</label><select id="cSt"></select></div>
+          <div style="display:flex;align-items:flex-end;padding-bottom:1px">
+            <label style="display:inline;margin:0"><input type="checkbox" id="soldOnly" checked> 売却済のみ取込</label>
+          </div>
+        </div>
         <div class="fx mb12">
+          <button class="btn btn-s" onclick="reRead('utf-8')">UTF-8で再読込</button>
           <button class="btn btn-s" onclick="reRead('shift_jis')">Shift-JISで再読込</button>
         </div>
         <div class="tw" style="max-height:180px;overflow-y:auto" id="csvPv"></div>
@@ -317,8 +325,8 @@ function clearAll(){
 // ================================================================
 // CSV
 // ================================================================
-function onDrop(e){e.preventDefault();e.currentTarget.classList.remove('over');const f=e.dataTransfer.files[0];if(f){curFile=f;readCSV(f,'utf-8')}}
-function onFile(e){const f=e.target.files[0];if(f){curFile=f;readCSV(f,'utf-8')}}
+function onDrop(e){e.preventDefault();e.currentTarget.classList.remove('over');const f=e.dataTransfer.files[0];if(f){curFile=f;readCSV(f,'shift_jis')}}
+function onFile(e){const f=e.target.files[0];if(f){curFile=f;readCSV(f,'shift_jis')}}
 function reRead(enc){if(curFile)readCSV(curFile,enc)}
 
 function readCSV(file,enc){
@@ -337,17 +345,25 @@ function pLine(l){const r=[];let c='',q=false;for(let i=0;i<l.length;i++){const 
 function setupCSV(){
   $('csvUI').style.display='block';
   $('csvSt').innerHTML=`<h4>${csvR.length}件 読込完了</h4>`;
-  ['cN','cD','cP','cDt'].forEach(id=>{
+  ['cN','cD','cP','cDt','cSt'].forEach(id=>{
     const s=$(id);s.innerHTML='<option value="">-- 選択 --</option>';
     csvH.forEach(h=>{const o=document.createElement('option');o.value=h.trim();o.textContent=h.trim();s.appendChild(o)});
   });
   csvH.forEach(h=>{
-    const hl=h.toLowerCase();
-    if(hl.includes('商品名')||hl.includes('name')||hl.includes('title'))$('cN').value=h.trim();
-    if(hl.includes('説明')||hl.includes('description'))$('cD').value=h.trim();
-    if(hl.includes('価格')||hl.includes('price')||hl.includes('販売')||hl.includes('金額'))$('cP').value=h.trim();
-    if(hl.includes('日')||hl.includes('date'))$('cDt').value=h.trim();
+    const ht=h.trim();const hl=ht.toLowerCase();
+    if(ht==='商品名'||hl.includes('name')||hl.includes('title'))$('cN').value=ht;
+    if(ht==='説明'||ht==='説明文'||ht==='商品説明'||hl.includes('description'))$('cD').value=ht;
+    if(ht==='価格'||hl.includes('price')||ht==='販売価格'||ht==='金額')$('cP').value=ht;
+    if(ht==='終了日'||ht==='出品日'||ht==='更新日'||hl.includes('date'))$('cDt').value=ht;
+    if(ht==='出品状況')$('cSt').value=ht;
   });
+  // Show sold count if 出品状況 detected
+  const stCol=csvH.find(h=>h.trim()==='出品状況');
+  if(stCol){
+    const soldCnt=csvR.filter(r=>(r[stCol.trim()]||'').includes('売却')).length;
+    $('csvSt').innerHTML=`<h4>${csvR.length}件 読込完了（うち売却済: ${soldCnt}件）</h4>`;
+  }
+
   const mc=Math.min(csvH.length,6);
   let h='<table><thead><tr>';for(let i=0;i<mc;i++)h+=`<th>${csvH[i]}</th>`;
   h+='</tr></thead><tbody>';
@@ -380,15 +396,33 @@ function calcTax(sp,tc,fee,ship){
 // OpenAI API (ブラウザ直接)
 // ================================================================
 async function callGPT(name,desc,key,model){
+  // <br>を改行に変換
+  const cleanDesc=(desc||'').replace(/<br\s*\/?>/gi,'\n').replace(/<[^>]*>/g,'');
+
   const prompt=`以下のメルカリPC出品を解析してJSONで返せ。
 
 商品名: ${name||'不明'}
-説明文: ${desc||'なし'}
+説明文:
+${cleanDesc.substring(0,1500)}
 
-JSON形式:
-{"cpu":"CPU名","ram":"メモリ","mb":"マザボ","gpu":"GPU名","ssd":"SSD","hdd":"HDD(なければnull)","psu":"電源","monitor":"モニター(なければnull)","keyboard":"キーボード(なければnull)","case_name":"ケース名(H17,PIRAWH,DS900WH,T4,CXWH等)","option":"オプション(WiFi,水冷等。なければnull)","is_fullset":true/false,"is_gaming_pc":true/false,"condition":"新品/中古/リファービッシュ"}
+【重要ルール】
+- 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、それが最優先。
+  例: 「Ryzen 7 5700X に変更」→ CPUはRyzen 7 5700X
+  例: 「SSD 1TB に変更」→ SSDは1TB
+  例: 「メモリ DDR4 32GB」→ RAMはDDR4 32GB
+  例: 「①7700X に変更 ②SSD 1TB」→ CPUは7700X、SSDは1TB
+- オプションで記載されたパーツは、説明文の後半に書いてあるベースPC構成より優先
+- 「〜抜き」は除外を意味する（例:「キーボード抜き」→ keyboard=null）
+- 「単品」=本体のみ、周辺機器なし
+- 「CPU無し」→ cpu=null
+- ケース名は商品名末尾やスペック欄から判別(H17,PIRAWH,DS900WH,DS900BK,T4,CXWH等)
+- 「水冷」「液晶水冷」はoptionに含める
+- 「WiFi」「Bluetooth」「内蔵Wi-Fi」はoptionに含める
 
-注意: is_fullset=モニター・キーボード等がセット。GPU正式名で。JSONのみ返せ。`;
+JSON形式で返せ。不明はnull:
+{"cpu":"CPU名","ram":"メモリ(容量と規格)","mb":"マザボ","gpu":"GPU名","ssd":"SSD(容量)","hdd":"HDD(なければnull)","psu":"電源","monitor":"モニター(なければnull)","keyboard":"キーボード(なければnull)","case_name":"ケース名","option":"オプション(水冷,WiFi等カンマ区切り。なければnull)","is_fullset":true/false,"is_gaming_pc":true/false,"condition":"新品パーツ/中古/リファービッシュ"}
+
+JSONのみ返せ。`;
 
   const resp=await fetch('https://api.openai.com/v1/chat/completions',{
     method:'POST',
@@ -411,21 +445,30 @@ async function startAI(){
   if(!csvR.length){alert('CSVを読み込んでください');return}
   const model=$('mdl').value;
   const cN=$('cN').value,cD=$('cD').value,cP=$('cP').value,cDt=$('cDt').value;
+  const cSt=$('cSt').value;
+  const soldOnly=$('soldOnly').checked;
   const defShip=parseInt($('defShip').value)||1500;
   const feeRate=(parseFloat($('feeRate').value)||10)/100;
+
+  // フィルタ
+  let targetRows=csvR;
+  if(soldOnly&&cSt){
+    targetRows=csvR.filter(r=>(r[cSt]||'').includes('売却'));
+  }
+  if(!targetRows.length){alert('対象データがありません（売却済フィルタを確認）');return}
 
   go(1);$('aiProg').style.display='block';$('aiRes').style.display='none';
   const newSales=[];
 
-  for(let i=0;i<csvR.length;i++){
-    const row=csvR[i];
+  for(let i=0;i<targetRows.length;i++){
+    const row=targetRows[i];
     const nm=cN?row[cN]||'':'';
     const ds=cD?row[cD]||'':'';
     const pr=cP?parseInt(String(row[cP]).replace(/[,¥￥]/g,''))||0:0;
     const dt=cDt?row[cDt]||'':'';
-    const pct=((i+1)/csvR.length*100).toFixed(0);
+    const pct=((i+1)/targetRows.length*100).toFixed(0);
     $('pBar').style.width=pct+'%';
-    $('pTxt').textContent=`${i+1} / ${csvR.length}`;
+    $('pTxt').textContent=`${i+1} / ${targetRows.length}`;
     $('pCur').textContent=nm.substring(0,50);
 
     let parts=null;
@@ -440,7 +483,7 @@ async function startAI(){
       });
     }
     newSales.push({id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,parts:parts||{},costs,missing:miss,shipping:defShip,fee_rate:feeRate});
-    if(i<csvR.length-1)await new Promise(r=>setTimeout(r,400));
+    if(i<targetRows.length-1)await new Promise(r=>setTimeout(r,400));
   }
 
   sales=[...sales,...newSales];saveS();
