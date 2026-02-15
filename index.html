@@ -328,9 +328,25 @@ tr:hover td{background:#fafaf5}
       <div class="cd-t">🔗 URL取込</div>
       <div class="row fx-c">
         <div style="flex:1"><input type="text" id="urlInput" placeholder="メルカリ商品URLを貼り付け（例: https://jp.mercari.com/item/m...）"></div>
-        <button class="btn btn-p" onclick="fetchURL()" id="btnURL" style="flex-shrink:0;white-space:nowrap">取込+解析</button>
+        <button class="btn btn-p" onclick="fetchURL()" id="btnURL" style="flex-shrink:0;white-space:nowrap">取込</button>
       </div>
       <div id="urlSt" class="mt8" style="font-size:11px"></div>
+      <div id="urlPreview" style="display:none" class="mt12">
+        <div class="al al-w"><h4>抽出結果を確認・修正してください</h4><p>内容が正しければ「GPT解析して追加」を押してください</p></div>
+        <div class="row mb12">
+          <div><label>商品名</label><input type="text" id="urlName"></div>
+          <div><label>売値 ¥</label><input type="number" id="urlPrice"></div>
+        </div>
+        <div class="mb12">
+          <label>説明文（GPT解析に使用）</label>
+          <textarea id="urlDesc" rows="5"></textarea>
+        </div>
+        <div class="fx">
+          <button class="btn btn-p" onclick="urlConfirm()" id="btnUrlConfirm">GPT解析して追加</button>
+          <button class="btn btn-s" onclick="$('urlPreview').style.display='none'">キャンセル</button>
+        </div>
+        <div id="urlConfirmSt" class="mt8" style="font-size:11px"></div>
+      </div>
     </div>
 
     <!-- Manual Entry -->
@@ -925,9 +941,9 @@ async function fetchURL(){
 
   $('btnURL').disabled=true;
   $('urlSt').innerHTML='取得中...';
+  $('urlPreview').style.display='none';
 
   try{
-    // Try multiple CORS proxies
     const proxies=[
       'https://corsproxy.io/?',
       'https://api.allorigins.win/raw?url=',
@@ -940,24 +956,21 @@ async function fetchURL(){
         if(resp.ok){html=await resp.text();if(html.length>500)break;html=null}
       }catch{}
     }
-    if(!html){$('urlSt').innerHTML='<span class="red">取得失敗 — プロキシ制限の可能性があります。手動追加をお使いください</span>';$('btnURL').disabled=false;return}
+    if(!html){$('urlSt').innerHTML='<span class="red">取得失敗 — URLの商品名・説明文・売値を手動追加に貼り付けてください</span>';$('btnURL').disabled=false;return}
 
     let name='',price=0,desc='';
 
-    // Method 1: __NEXT_DATA__ (Next.js — most reliable for Mercari)
+    // Method 1: __NEXT_DATA__
     const ndMatch=html.match(/<script\s+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
     if(ndMatch){
       try{
         const nd=JSON.parse(ndMatch[1]);
-        // Navigate the Next.js data structure
         const props=nd.props?.pageProps;
         if(props){
-          // Try common mercari data paths
           const item=props.item||props.product||props;
           if(item.name)name=item.name;
           if(item.price)price=parseInt(item.price)||0;
           if(item.description)desc=item.description;
-          // Alternative nested structure
           if(!name&&item.itemName)name=item.itemName;
           if(!price&&item.itemPrice)price=parseInt(item.itemPrice)||0;
           if(!desc&&item.itemDescription)desc=item.itemDescription;
@@ -984,45 +997,69 @@ async function fetchURL(){
       }
     }
 
-    // Method 3: OG meta tags
+    // Method 3: OG meta
     const doc=new DOMParser().parseFromString(html,'text/html');
     if(!name){const el=doc.querySelector('meta[property="og:title"]');if(el)name=el.getAttribute('content')||''}
     if(!desc){const el=doc.querySelector('meta[property="og:description"]');if(el)desc=el.getAttribute('content')||''}
     if(!price){const el=doc.querySelector('meta[property="product:price:amount"]');if(el)price=parseInt(el.getAttribute('content'))||0}
 
-    // Method 4: title tag
+    // Method 4: title
     if(!name){const el=doc.querySelector('title');if(el)name=el.textContent.replace(/\s*-\s*メルカリ.*$/,'').trim()}
 
-    // Method 5: Regex on raw HTML for price
+    // Method 5-6: regex fallbacks
     if(!price){const m=html.match(/"price"\s*:\s*"?(\d+)"?/);if(m)price=parseInt(m[1])||0}
-    if(!price){const m=html.match(/¥\s*([\d,]+)/);if(m)price=parseInt(m[1].replace(/,/g,''))||0}
-
-    // Method 6: try to get description from script data
     if(!desc){
       const descMatch=html.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
       if(descMatch)desc=descMatch[1].replace(/\\n/g,'\n').replace(/\\"/g,'"').replace(/\\u[\dA-Fa-f]{4}/g,m=>String.fromCharCode(parseInt(m.slice(2),16)));
     }
 
-    if(!name&&!price){
-      $('urlSt').innerHTML='<span class="red">商品情報を抽出できませんでした。手動追加をお使いください</span>'
-        +`<details class="mt8"><summary style="font-size:10px;cursor:pointer;color:#888">デバッグ: HTML先頭500文字</summary><pre style="font-size:9px;max-height:200px;overflow:auto;background:#f5f5f0;padding:8px;border:1px solid #ddd">${esc(html.substring(0,500))}</pre></details>`;
-      $('btnURL').disabled=false;return;
+    // Filter out junk (e.g. redirected to top page)
+    if(name==='メルカリ'||name.startsWith('メルカリ - '))name='';
+    if(price<1000)price=0; // Mercari minimum for PCs is much higher
+
+    // Show preview with whatever we got — user can edit
+    $('urlName').value=name;
+    $('urlPrice').value=price||'';
+    $('urlDesc').value=desc;
+    $('urlPreview').style.display='block';
+    $('urlConfirmSt').innerHTML='';
+
+    if(name&&price&&desc){
+      $('urlSt').innerHTML=`<span class="grn">取得成功</span> — 内容を確認してください`;
+    } else if(name||desc){
+      $('urlSt').innerHTML=`<span class="ylw">一部取得</span> — 不足情報を手入力してください`;
+    } else {
+      $('urlSt').innerHTML=`<span class="red">抽出失敗</span> — 商品ページから手動でコピペしてください`;
     }
 
-    $('urlSt').innerHTML=`<span class="grn">取得成功:</span> ${esc(name.substring(0,60))} / ¥${price.toLocaleString()}<br><span style="color:#888">GPT解析中...</span>`;
-
-    const sale=await processSingleItem(name,desc,price,'');
-    if(sale){
-      const hasMiss=(sale.missing||[]).length>0;
-      $('urlSt').innerHTML=`<span class="grn">✓ 追加完了</span> ${esc(name.substring(0,40))} / ¥${price.toLocaleString()}`
-        +(sale.parseError?` <span class="red">⚠解析エラー</span>`:'')
-        +(hasMiss?` <span class="ylw">⚠未登録パーツ${sale.missing.length}件</span>`:'');
-      $('urlInput').value='';
-    }
   }catch(e){
     $('urlSt').innerHTML=`<span class="red">エラー: ${e.message}</span>`;
   }
   $('btnURL').disabled=false;
+}
+
+async function urlConfirm(){
+  const name=$('urlName').value.trim();
+  const desc=$('urlDesc').value.trim();
+  const price=parseInt($('urlPrice').value)||0;
+
+  if(!name&&!desc){$('urlConfirmSt').innerHTML='<span class="red">商品名か説明文を入力してください</span>';return}
+  if(!price){$('urlConfirmSt').innerHTML='<span class="red">売値を入力してください</span>';return}
+
+  $('btnUrlConfirm').disabled=true;
+  $('urlConfirmSt').innerHTML='GPT解析中...';
+
+  const sale=await processSingleItem(name,desc,price,'');
+  if(sale){
+    const hasMiss=(sale.missing||[]).length>0;
+    $('urlConfirmSt').innerHTML=`<span class="grn">✓ 追加完了</span>`
+      +(sale.parseError?` <span class="red">⚠解析エラー: ${sale.parseError}</span>`:'')
+      +(hasMiss?` <span class="ylw">⚠未登録パーツ${sale.missing.length}件</span>`:'');
+    $('urlPreview').style.display='none';
+    $('urlInput').value='';
+    $('urlSt').innerHTML=`<span class="grn">✓ 追加完了:</span> ${esc(name.substring(0,40))} / ¥${price.toLocaleString()}`;
+  }
+  $('btnUrlConfirm').disabled=false;
 }
 
 // ================================================================
