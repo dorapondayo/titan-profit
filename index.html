@@ -322,6 +322,34 @@ tr:hover td{background:#fafaf5}
 
   <!-- ===== Panel 1: AI Parse ===== -->
   <div class="pnl" id="p1">
+
+    <!-- URL Import -->
+    <div class="cd">
+      <div class="cd-t">🔗 URL取込</div>
+      <div class="row fx-c">
+        <div style="flex:1"><input type="text" id="urlInput" placeholder="メルカリ商品URLを貼り付け（例: https://jp.mercari.com/item/m...）"></div>
+        <button class="btn btn-p" onclick="fetchURL()" id="btnURL" style="flex-shrink:0;white-space:nowrap">取込+解析</button>
+      </div>
+      <div id="urlSt" class="mt8" style="font-size:11px"></div>
+    </div>
+
+    <!-- Manual Entry -->
+    <details class="cd" style="cursor:default">
+      <summary style="font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;color:#555;padding-bottom:8px;border-bottom:1px solid #eee;margin-bottom:12px">✏️ 手動追加</summary>
+      <div class="row mb12">
+        <div><label>商品名</label><input type="text" id="manName" placeholder="ゲーミングPC RTX5070..."></div>
+        <div><label>売値 ¥</label><input type="number" id="manPrice" placeholder="200000"></div>
+        <div><label>日にち</label><input type="text" id="manDate" placeholder="2026/02/15"></div>
+      </div>
+      <div class="mb12">
+        <label>説明文（GPT解析に使用）</label>
+        <textarea id="manDesc" rows="5" placeholder="スペックやオプション情報を入力...&#10;例: RTX5070搭載、Ryzen 7 5700X、DDR4 32GB、SSD 1TB、簡易水冷付き、フルセット"></textarea>
+      </div>
+      <button class="btn btn-p" onclick="manualAdd()" id="btnMan">GPT解析して追加</button>
+      <div id="manSt" class="mt8" style="font-size:11px"></div>
+    </details>
+
+    <!-- Progress -->
     <div id="aiProg" style="display:none">
       <div class="cd">
         <div class="cd-t">解析中...</div>
@@ -858,7 +886,137 @@ JSONのみ返せ。`;
 }
 
 // ================================================================
-// AI Parse
+// Single item processing (shared by URL fetch & manual add)
+// ================================================================
+async function processSingleItem(name,desc,price,date){
+  const key=$('apiKey').value.trim();
+  if(!key){alert('APIキーを入力してください');return null}
+  const model=$('mdl').value;
+  const feeRate=parseInt($('defFee').value)||10;
+  const defShip=parseInt($('defShip').value)||1500;
+
+  let parts=null,parseError='';
+  try{parts=await callGPT(name,desc,key,model)}catch(e){parseError=e.message}
+
+  let gpuKey=null,costs={},missing=[];
+  if(parts){
+    gpuKey=parts.gpu_key?matchGpu(parts.gpu_key):matchGpu(parts.gpu);
+    const result=calcCosts(parts,gpuKey);
+    costs=result.costs;missing=result.missing;
+  }
+
+  const sale={
+    id:Date.now(),product_name:name,description:desc,sale_price:price,date:date||'',
+    parts:parts||{},gpuKey,costs,missing,
+    shipping:defShip,fee_rate:feeRate,parseError
+  };
+  sales.push(sale);saveS();
+  renderMissing();renderSales();
+  return sale;
+}
+
+// ================================================================
+// URL Fetch (CORS proxy)
+// ================================================================
+async function fetchURL(){
+  const url=$('urlInput').value.trim();
+  if(!url){$('urlSt').innerHTML='<span class="red">URLを入力してください</span>';return}
+  if(!url.includes('mercari.com')){$('urlSt').innerHTML='<span class="red">メルカリのURLを入力してください</span>';return}
+
+  $('btnURL').disabled=true;
+  $('urlSt').innerHTML='取得中...';
+
+  try{
+    // Try multiple CORS proxies
+    const proxies=[
+      'https://corsproxy.io/?',
+      'https://api.allorigins.win/raw?url=',
+    ];
+    let html=null;
+    for(const proxy of proxies){
+      try{
+        const resp=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(10000)});
+        if(resp.ok){html=await resp.text();break}
+      }catch{}
+    }
+    if(!html){$('urlSt').innerHTML='<span class="red">取得失敗 — プロキシ制限の可能性があります。手動追加をお使いください</span>';$('btnURL').disabled=false;return}
+
+    // Extract from HTML
+    const doc=new DOMParser().parseFromString(html,'text/html');
+
+    // Product name
+    let name='';
+    const ogTitle=doc.querySelector('meta[property="og:title"]');
+    if(ogTitle)name=ogTitle.content||'';
+    if(!name){const h1=doc.querySelector('h1');if(h1)name=h1.textContent.trim()}
+
+    // Price
+    let price=0;
+    const ogPrice=doc.querySelector('meta[property="product:price:amount"]');
+    if(ogPrice)price=parseInt(ogPrice.content)||0;
+    if(!price){
+      const priceEl=doc.querySelector('[data-testid="price"]');
+      if(priceEl)price=parseInt(priceEl.textContent.replace(/[^0-9]/g,''))||0;
+    }
+    if(!price){
+      const m=html.match(/"price"\s*:\s*(\d+)/);
+      if(m)price=parseInt(m[1])||0;
+    }
+
+    // Description
+    let desc='';
+    const ogDesc=doc.querySelector('meta[property="og:description"]');
+    if(ogDesc)desc=ogDesc.content||'';
+    // Try to get full description from JSON-LD or script
+    const scriptMatch=html.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+    if(scriptMatch&&scriptMatch[1].length>desc.length)desc=scriptMatch[1].replace(/\\n/g,'\n').replace(/\\"/g,'"');
+
+    if(!name&&!price){$('urlSt').innerHTML='<span class="red">商品情報を抽出できませんでした</span>';$('btnURL').disabled=false;return}
+
+    $('urlSt').innerHTML=`<span class="grn">取得成功:</span> ${esc(name.substring(0,60))} / ¥${price.toLocaleString()}<br><span style="color:#888">GPT解析中...</span>`;
+
+    const sale=await processSingleItem(name,desc,price,'');
+    if(sale){
+      const hasMiss=(sale.missing||[]).length>0;
+      $('urlSt').innerHTML=`<span class="grn">✓ 追加完了</span> ${esc(name.substring(0,40))} / ¥${price.toLocaleString()}`
+        +(sale.parseError?` <span class="red">⚠解析エラー</span>`:'')
+        +(hasMiss?` <span class="ylw">⚠未登録パーツ${sale.missing.length}件</span>`:'');
+      $('urlInput').value='';
+    }
+  }catch(e){
+    $('urlSt').innerHTML=`<span class="red">エラー: ${e.message}</span>`;
+  }
+  $('btnURL').disabled=false;
+}
+
+// ================================================================
+// Manual Entry
+// ================================================================
+async function manualAdd(){
+  const name=$('manName').value.trim();
+  const desc=$('manDesc').value.trim();
+  const price=parseInt($('manPrice').value)||0;
+  const date=$('manDate').value.trim();
+
+  if(!name&&!desc){$('manSt').innerHTML='<span class="red">商品名か説明文を入力してください</span>';return}
+  if(!price){$('manSt').innerHTML='<span class="red">売値を入力してください</span>';return}
+
+  $('btnMan').disabled=true;
+  $('manSt').innerHTML='GPT解析中...';
+
+  const sale=await processSingleItem(name,desc,price,date);
+  if(sale){
+    const hasMiss=(sale.missing||[]).length>0;
+    $('manSt').innerHTML=`<span class="grn">✓ 追加完了</span>`
+      +(sale.parseError?` <span class="red">⚠解析エラー: ${sale.parseError}</span>`:'')
+      +(hasMiss?` <span class="ylw">⚠未登録パーツ${sale.missing.length}件</span>`:'');
+    $('manName').value='';$('manDesc').value='';$('manPrice').value='';$('manDate').value='';
+  }
+  $('btnMan').disabled=false;
+}
+
+// ================================================================
+// AI Parse (CSV bulk)
 // ================================================================
 async function startAI(){
   const key=$('apiKey').value.trim();
