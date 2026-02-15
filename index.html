@@ -892,7 +892,7 @@ async function processSingleItem(name,desc,price,date){
   const key=$('apiKey').value.trim();
   if(!key){alert('APIキーを入力してください');return null}
   const model=$('mdl').value;
-  const feeRate=parseInt($('defFee').value)||10;
+  const feeRate=parseInt($('feeRate').value)||10;
   const defShip=parseInt($('defShip').value)||1500;
 
   let parts=null,parseError='';
