@@ -323,47 +323,23 @@ tr:hover td{background:#fafaf5}
   <!-- ===== Panel 1: AI Parse ===== -->
   <div class="pnl" id="p1">
 
-    <!-- URL Import -->
-    <div class="cd">
-      <div class="cd-t">🔗 URL取込</div>
-      <div class="row fx-c">
-        <div style="flex:1"><input type="text" id="urlInput" placeholder="メルカリ商品URLを貼り付け（例: https://jp.mercari.com/item/m...）"></div>
-        <button class="btn btn-p" onclick="fetchURL()" id="btnURL" style="flex-shrink:0;white-space:nowrap">取込</button>
-      </div>
-      <div id="urlSt" class="mt8" style="font-size:11px"></div>
-      <div id="urlPreview" style="display:none" class="mt12">
-        <div class="al al-w"><h4>抽出結果を確認・修正してください</h4><p>内容が正しければ「GPT解析して追加」を押してください</p></div>
-        <div class="row mb12">
-          <div><label>商品名</label><input type="text" id="urlName"></div>
-          <div><label>売値 ¥</label><input type="number" id="urlPrice"></div>
-        </div>
-        <div class="mb12">
-          <label>説明文（GPT解析に使用）</label>
-          <textarea id="urlDesc" rows="5"></textarea>
-        </div>
-        <div class="fx">
-          <button class="btn btn-p" onclick="urlConfirm()" id="btnUrlConfirm">GPT解析して追加</button>
-          <button class="btn btn-s" onclick="$('urlPreview').style.display='none'">キャンセル</button>
-        </div>
-        <div id="urlConfirmSt" class="mt8" style="font-size:11px"></div>
-      </div>
-    </div>
-
     <!-- Manual Entry -->
-    <details class="cd" style="cursor:default">
-      <summary style="font-size:11px;font-weight:700;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;color:#555;padding-bottom:8px;border-bottom:1px solid #eee;margin-bottom:12px">✏️ 手動追加</summary>
+    <div class="cd">
+      <div class="cd-t">✏️ 手動追加</div>
       <div class="row mb12">
-        <div><label>商品名</label><input type="text" id="manName" placeholder="ゲーミングPC RTX5070..."></div>
+        <div style="flex:2"><label>商品名</label><input type="text" id="manName" placeholder="ゲーミングPC RTX5070..."></div>
         <div><label>売値 ¥</label><input type="number" id="manPrice" placeholder="200000"></div>
-        <div><label>日にち</label><input type="text" id="manDate" placeholder="2026/02/15"></div>
+        <div><label>日にち</label><input type="date" id="manDate"></div>
       </div>
       <div class="mb12">
-        <label>説明文（GPT解析に使用）</label>
-        <textarea id="manDesc" rows="5" placeholder="スペックやオプション情報を入力...&#10;例: RTX5070搭載、Ryzen 7 5700X、DDR4 32GB、SSD 1TB、簡易水冷付き、フルセット"></textarea>
+        <label>説明文（GPT解析に使用 — 商品ページからコピペ）</label>
+        <textarea id="manDesc" rows="6" placeholder="メルカリ商品ページの説明文をここに貼り付け&#10;&#10;例:&#10;RTX5070搭載、Ryzen 7 5700X に変更、DDR4 32GB、SSD 1TB&#10;簡易水冷付き、フルセット（モニター+キーボード+マウス）"></textarea>
       </div>
-      <button class="btn btn-p" onclick="manualAdd()" id="btnMan">GPT解析して追加</button>
-      <div id="manSt" class="mt8" style="font-size:11px"></div>
-    </details>
+      <div class="fx fx-c">
+        <button class="btn btn-p" onclick="manualAdd()" id="btnMan">GPT解析して追加</button>
+        <span id="manSt" style="font-size:11px"></span>
+      </div>
+    </div>
 
     <!-- Progress -->
     <div id="aiProg" style="display:none">
@@ -932,137 +908,6 @@ async function processSingleItem(name,desc,price,date){
 }
 
 // ================================================================
-// URL Fetch (CORS proxy)
-// ================================================================
-async function fetchURL(){
-  const url=$('urlInput').value.trim();
-  if(!url){$('urlSt').innerHTML='<span class="red">URLを入力してください</span>';return}
-  if(!url.includes('mercari.com')){$('urlSt').innerHTML='<span class="red">メルカリのURLを入力してください</span>';return}
-
-  $('btnURL').disabled=true;
-  $('urlSt').innerHTML='取得中...';
-  $('urlPreview').style.display='none';
-
-  try{
-    const proxies=[
-      'https://corsproxy.io/?',
-      'https://api.allorigins.win/raw?url=',
-      'https://api.codetabs.com/v1/proxy?quest=',
-    ];
-    let html=null;
-    for(const proxy of proxies){
-      try{
-        const resp=await fetch(proxy+encodeURIComponent(url),{signal:AbortSignal.timeout(12000)});
-        if(resp.ok){html=await resp.text();if(html.length>500)break;html=null}
-      }catch{}
-    }
-    if(!html){$('urlSt').innerHTML='<span class="red">取得失敗 — URLの商品名・説明文・売値を手動追加に貼り付けてください</span>';$('btnURL').disabled=false;return}
-
-    let name='',price=0,desc='';
-
-    // Method 1: __NEXT_DATA__
-    const ndMatch=html.match(/<script\s+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-    if(ndMatch){
-      try{
-        const nd=JSON.parse(ndMatch[1]);
-        const props=nd.props?.pageProps;
-        if(props){
-          const item=props.item||props.product||props;
-          if(item.name)name=item.name;
-          if(item.price)price=parseInt(item.price)||0;
-          if(item.description)desc=item.description;
-          if(!name&&item.itemName)name=item.itemName;
-          if(!price&&item.itemPrice)price=parseInt(item.itemPrice)||0;
-          if(!desc&&item.itemDescription)desc=item.itemDescription;
-        }
-      }catch{}
-    }
-
-    // Method 2: JSON-LD
-    if(!name||!price){
-      const ldMatches=html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g);
-      for(const m of ldMatches){
-        try{
-          const ld=JSON.parse(m[1]);
-          const obj=Array.isArray(ld)?ld[0]:ld;
-          if(obj['@type']==='Product'||obj['@type']==='IndividualProduct'){
-            if(!name&&obj.name)name=obj.name;
-            if(!desc&&obj.description)desc=obj.description;
-            if(!price&&obj.offers){
-              const off=Array.isArray(obj.offers)?obj.offers[0]:obj.offers;
-              price=parseInt(off.price)||0;
-            }
-          }
-        }catch{}
-      }
-    }
-
-    // Method 3: OG meta
-    const doc=new DOMParser().parseFromString(html,'text/html');
-    if(!name){const el=doc.querySelector('meta[property="og:title"]');if(el)name=el.getAttribute('content')||''}
-    if(!desc){const el=doc.querySelector('meta[property="og:description"]');if(el)desc=el.getAttribute('content')||''}
-    if(!price){const el=doc.querySelector('meta[property="product:price:amount"]');if(el)price=parseInt(el.getAttribute('content'))||0}
-
-    // Method 4: title
-    if(!name){const el=doc.querySelector('title');if(el)name=el.textContent.replace(/\s*-\s*メルカリ.*$/,'').trim()}
-
-    // Method 5-6: regex fallbacks
-    if(!price){const m=html.match(/"price"\s*:\s*"?(\d+)"?/);if(m)price=parseInt(m[1])||0}
-    if(!desc){
-      const descMatch=html.match(/"description"\s*:\s*"((?:[^"\\]|\\.)*)"/);
-      if(descMatch)desc=descMatch[1].replace(/\\n/g,'\n').replace(/\\"/g,'"').replace(/\\u[\dA-Fa-f]{4}/g,m=>String.fromCharCode(parseInt(m.slice(2),16)));
-    }
-
-    // Filter out junk (e.g. redirected to top page)
-    if(name==='メルカリ'||name.startsWith('メルカリ - '))name='';
-    if(price<1000)price=0; // Mercari minimum for PCs is much higher
-
-    // Show preview with whatever we got — user can edit
-    $('urlName').value=name;
-    $('urlPrice').value=price||'';
-    $('urlDesc').value=desc;
-    $('urlPreview').style.display='block';
-    $('urlConfirmSt').innerHTML='';
-
-    if(name&&price&&desc){
-      $('urlSt').innerHTML=`<span class="grn">取得成功</span> — 内容を確認してください`;
-    } else if(name||desc){
-      $('urlSt').innerHTML=`<span class="ylw">一部取得</span> — 不足情報を手入力してください`;
-    } else {
-      $('urlSt').innerHTML=`<span class="red">抽出失敗</span> — 商品ページから手動でコピペしてください`;
-    }
-
-  }catch(e){
-    $('urlSt').innerHTML=`<span class="red">エラー: ${e.message}</span>`;
-  }
-  $('btnURL').disabled=false;
-}
-
-async function urlConfirm(){
-  const name=$('urlName').value.trim();
-  const desc=$('urlDesc').value.trim();
-  const price=parseInt($('urlPrice').value)||0;
-
-  if(!name&&!desc){$('urlConfirmSt').innerHTML='<span class="red">商品名か説明文を入力してください</span>';return}
-  if(!price){$('urlConfirmSt').innerHTML='<span class="red">売値を入力してください</span>';return}
-
-  $('btnUrlConfirm').disabled=true;
-  $('urlConfirmSt').innerHTML='GPT解析中...';
-
-  const sale=await processSingleItem(name,desc,price,'');
-  if(sale){
-    const hasMiss=(sale.missing||[]).length>0;
-    $('urlConfirmSt').innerHTML=`<span class="grn">✓ 追加完了</span>`
-      +(sale.parseError?` <span class="red">⚠解析エラー: ${sale.parseError}</span>`:'')
-      +(hasMiss?` <span class="ylw">⚠未登録パーツ${sale.missing.length}件</span>`:'');
-    $('urlPreview').style.display='none';
-    $('urlInput').value='';
-    $('urlSt').innerHTML=`<span class="grn">✓ 追加完了:</span> ${esc(name.substring(0,40))} / ¥${price.toLocaleString()}`;
-  }
-  $('btnUrlConfirm').disabled=false;
-}
-
-// ================================================================
 // Manual Entry
 // ================================================================
 async function manualAdd(){
@@ -1269,6 +1114,41 @@ function applyMissing(){
 }
 
 // ================================================================
+// ================================================================
+// Inline edit (sales detail)
+// ================================================================
+function editCost(idx,key,val){
+  const v=parseInt(val)||0;
+  if(!sales[idx].costs)sales[idx].costs={};
+  sales[idx].costs[key]=v;
+  saveS();
+  updateSaleHeader(idx);
+}
+function editSaleField(idx,field,val){
+  sales[idx][field]=parseInt(val)||0;
+  saveS();
+  updateSaleHeader(idx);
+}
+function updateSaleHeader(idx){
+  const s=sales[idx];
+  const p=calcProfit(s);
+  const el=document.getElementById('sr_'+idx);
+  if(!el)return;
+  const nv=el.querySelectorAll('.sr-nv');
+  if(nv.length>=4){
+    nv[0].textContent='¥'+s.sale_price.toLocaleString();
+    nv[1].textContent='¥'+p.costTotal.toLocaleString();
+    nv[2].textContent='¥'+p.profit.toLocaleString();
+    nv[3].textContent=(p.profitRate*100).toFixed(1)+'%';
+  }
+  let ts=0,tp=0,tt=0;
+  sales.forEach(s2=>{const p2=calcProfit(s2);ts+=s2.sale_price;tp+=p2.profit;tt+=p2.tax});
+  $('s1').textContent='¥'+ts.toLocaleString();
+  $('s2').textContent='¥'+tp.toLocaleString();
+  $('s3').textContent=sales.length>0?((tp/ts*100).toFixed(1)+'%'):'0%';
+  $('s4').textContent='¥'+tt.toLocaleString();
+}
+
 // Sales Rendering
 // ================================================================
 function renderSales(){
@@ -1280,20 +1160,20 @@ function renderSales(){
     const pRate=(p.profitRate*100).toFixed(1);
 
     const costParts=[
-      ['GPU',s.parts?.gpu||s.gpuKey||'—',s.costs?.gpu],
-      ['CPU',s.parts?.cpu||'ベース',s.costs?.cpu],
-      ['MB','A520',s.costs?.mb],
-      ['RAM',s.parts?.ram||'16GB',s.costs?.ram],
-      ['SSD',s.parts?.ssd||'512GB',s.costs?.ssd],
-      ['ケース',s.parts?.case_name||'標準',s.costs?.cas],
-      ['電源','—',s.costs?.psu],
-      ['クーラー','—',s.costs?.cool],
-      ['モニター',s.parts?.monitor||'なし',s.costs?.monitor],
-      ['KB+マウス',s.parts?.keyboard||'なし',s.costs?.keyboard],
-      ['オプション',s.parts?.option||'なし',s.costs?.option],
+      ['GPU','gpu',s.parts?.gpu||s.gpuKey||'—',s.costs?.gpu],
+      ['CPU','cpu',s.parts?.cpu||'ベース',s.costs?.cpu],
+      ['MB','mb','A520',s.costs?.mb],
+      ['RAM','ram',s.parts?.ram||'16GB',s.costs?.ram],
+      ['SSD','ssd',s.parts?.ssd||'512GB',s.costs?.ssd],
+      ['ケース','cas',s.parts?.case_name||'標準',s.costs?.cas],
+      ['電源','psu','—',s.costs?.psu],
+      ['クーラー','cool','—',s.costs?.cool],
+      ['モニター','monitor',s.parts?.monitor||'なし',s.costs?.monitor],
+      ['KB+マウス','keyboard',s.parts?.keyboard||'なし',s.costs?.keyboard],
+      ['オプション','option',s.parts?.option||'なし',s.costs?.option],
     ];
 
-    html+=`<div class="sr">
+    html+=`<div class="sr" id="sr_${idx}">
       <div class="sr-h" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <div class="sr-nm">
           <div class="sr-nm-t">${esc(s.product_name||'—')}</div>
@@ -1308,11 +1188,16 @@ function renderSales(){
         </div>
       </div>
       <div class="sr-d" style="display:none">
+        <div class="row mb12 mt12">
+          <div><label>売値 ¥</label><input type="number" value="${s.sale_price}" onchange="editSaleField(${idx},'sale_price',this.value)" style="font-size:12px"></div>
+          <div><label>送料 ¥</label><input type="number" value="${s.shipping}" onchange="editSaleField(${idx},'shipping',this.value)" style="font-size:12px"></div>
+          <div><label>手数料率 %</label><input type="number" value="${s.fee_rate}" onchange="editSaleField(${idx},'fee_rate',this.value)" style="font-size:12px"></div>
+        </div>
         <div class="pg">`;
     const missCats=new Set((s.missing||[]).map(m=>m.cat));
-    costParts.forEach(([label,name,cost])=>{
+    costParts.forEach(([label,key,name,cost])=>{
       const isMiss=(label==='GPU'&&missCats.has('gpu'))||(label==='CPU'&&missCats.has('cpu'))||(label==='RAM'&&missCats.has('ram'))||(label==='SSD'&&missCats.has('ssd'))||(label==='ケース'&&missCats.has('cas'))||(label==='オプション'&&missCats.has('option'));
-      html+=`<div class="pc${isMiss?' miss':''}"><div class="pc-l">${label}${isMiss?' <span class="red">⚠未登録</span>':''}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><div class="mono" style="font-size:11px">¥${(cost||0).toLocaleString()}</div></div>`;
+      html+=`<div class="pc${isMiss?' miss':''}"><div class="pc-l">${label}${isMiss?' <span class="red">⚠</span>':''}</div><div class="pc-n" title="${esc(name)}">${esc(name)}</div><input type="number" value="${cost||0}" onchange="editCost(${idx},'${key}',this.value)" style="width:100%;font-size:11px;padding:3px 5px;font-family:'IBM Plex Mono',monospace;border:1px solid #ddd"></div>`;
     });
     html+=`</div>
         ${(s.missing||[]).length>0?`<div class="al al-w mt8"><h4>未登録パーツ ${s.missing.length}件</h4><p>${s.missing.map(m=>m.name).join(', ')} → 不足パーツタブで原価入力</p></div>`:''}
