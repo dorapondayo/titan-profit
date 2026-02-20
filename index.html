@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TITAN 利益計算 v3.0</title>
+<title>TITAN 利益計算 v3.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
@@ -71,10 +71,11 @@ tr:hover td{background:#fafaf5}
 .tag-m{border-color:#d99;color:#922;background:#fff0f0}
 .tag-o{border-color:#ccc;color:#666;background:#f8f8f3}
 .tag-g{border-color:#9c9;color:#264;background:#f0f8f0}
+.tag-b{border-color:#9bf;color:#246;background:#f0f4ff}
 .prog{width:100%;height:4px;background:#e5e5e0;margin:10px 0}
 .prog-f{height:100%;background:#1a1a1a;transition:width .3s}
 .mono{font-family:'IBM Plex Mono',monospace}
-.red{color:#c44}.grn{color:#2a7a2a}.ylw{color:#b08800}
+.red{color:#c44}.grn{color:#2a7a2a}.ylw{color:#b08800}.blu{color:#2a5aa0}
 .mt8{margin-top:8px}.mt12{margin-top:12px}.mt16{margin-top:16px}
 .mb12{margin-bottom:12px}.mb16{margin-bottom:16px}
 .fx{display:flex;gap:10px;flex-wrap:wrap}.fx-c{align-items:center}
@@ -82,6 +83,10 @@ tr:hover td{background:#fafaf5}
 .tbl-edit td{padding:4px 6px}
 .tbl-edit input{padding:4px 6px;font-size:11px;width:80px;text-align:right}
 .tbl-edit .gpu-name{font-weight:600;font-size:12px}
+.fuzzy-suggest{margin-top:4px;font-size:10px;color:#2a5aa0}
+.fuzzy-suggest span{cursor:pointer;text-decoration:underline;margin-right:8px}
+.fuzzy-suggest span:hover{color:#1a3a70}
+.alias-badge{display:inline-block;background:#e8f0fe;color:#2a5aa0;padding:1px 6px;border-radius:2px;font-size:9px;margin-left:6px;font-weight:600;letter-spacing:.03em}
 @media(max-width:768px){
   .stats{grid-template-columns:repeat(2,1fr)}
   .pg{grid-template-columns:repeat(2,1fr)}
@@ -95,7 +100,7 @@ tr:hover td{background:#fafaf5}
 <div class="hdr">
   <div>
     <div class="hdr-mark">TITAN</div>
-    <div class="hdr-sub">利益計算ツール v3.0 <span style="opacity:.5">/ 2026-02-15</span></div>
+    <div class="hdr-sub">利益計算ツール v3.1 <span style="opacity:.5">/ 2026-02-20</span></div>
   </div>
 </div>
 
@@ -261,6 +266,25 @@ tr:hover td{background:#fafaf5}
           <div><label>モニター（144hz）¥</label><input type="number" id="fixMon144" value="8000" onchange="fixedPrices.monitor144hz=parseInt(this.value)||0"></div>
         </div>
       </details>
+
+      <!-- ===== NEW: Alias Table Editor ===== -->
+      <details class="mt12">
+        <summary style="font-size:12px;font-weight:700;cursor:pointer;margin-bottom:8px">▼ エイリアス設定（表記揺れ吸収）<span class="alias-badge">NEW v3.1</span></summary>
+        <p style="font-size:11px;color:#888;margin-bottom:8px">GPTが正規化しきれなかった表記を自動で正しい名前に変換します。左が「入力される可能性のある表記」、右が「テーブル上の正式名」です。</p>
+        <div class="tw" style="max-height:300px;overflow-y:auto">
+          <table class="tbl-edit"><thead><tr><th>入力パターン（部分一致）</th><th>→ 変換先</th><th></th></tr></thead>
+            <tbody id="aliasTbody"></tbody>
+          </table>
+        </div>
+        <div class="fx mt8">
+          <input type="text" id="newAliasFrom" placeholder="パターン（例: 水冷クーラー黒）" style="width:200px">
+          <input type="text" id="newAliasTo" placeholder="変換先（例: 簡易水冷）" style="width:200px">
+          <button class="btn btn-s" onclick="addAlias()" style="padding:4px 12px;font-size:11px">追加</button>
+        </div>
+        <div class="fx mt8">
+          <button class="btn btn-s" onclick="resetAliases()" style="padding:4px 10px;font-size:10px">デフォルトに戻す</button>
+        </div>
+      </details>
     </div>
 
     <div class="cd">
@@ -299,7 +323,7 @@ tr:hover td{background:#fafaf5}
     <div class="cd">
       <div class="cd-t">引き継ぎ</div>
       <p style="font-size:11px;color:#888;margin-bottom:10px">※localStorageはHTML更新では消えません。別端末に移行する場合はファイル書出しを使ってください。</p>
-      <div style="font-size:12px;font-weight:600;margin-bottom:6px">原価テーブル設定（GPU・CPU・RAM・SSD・オプション・周辺機器）</div>
+      <div style="font-size:12px;font-weight:600;margin-bottom:6px">原価テーブル設定（GPU・CPU・RAM・SSD・オプション・周辺機器・エイリアス）</div>
       <div class="fx mb12">
         <button class="btn btn-s" onclick="exportTables()">テーブル書出し</button>
         <button class="btn btn-s" onclick="$('impTblF').click()">テーブル読込</button>
@@ -387,9 +411,10 @@ const LS_CFG='titan_cfg_v2';
 const LS_GPU='titan_gpu_v2';
 const LS_SALES='titan_sales_v2';
 const LS_OPT='titan_opt_v2';
+const LS_ALIAS='titan_alias_v1';
 
 // ================================================================
-// GPU Base Cost Table (イトウメルカリ用)
+// GPU Base Cost Table
 // ================================================================
 const DEFAULT_GPU_TABLE={
   'RX9070XT':  {gpu:110000,cpu:23000,mb:4000,ram:8000,ssd:7000,cas:7000,psu:7000,cool:300},
@@ -413,9 +438,8 @@ const DEFAULT_GPU_TABLE={
   'RX7600':    {gpu:41000, cpu:3500, mb:4000,ram:8000,ssd:7000,cas:7000,psu:6000,cool:300},
 };
 
-// Option upgrade prices (editable)
 const DEFAULT_OPT={
-  cpu:{'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'700X':23000,'7700X':25000,'5900X':40000,'9800X3D':50000,'5600X':12000,'5600':10000},
+  cpu:{'2600':3500,'1700':3500,'3700X':6000,'5700X':15000,'7700':23000,'700X':23000,'7700X':25000,'5900X':40000,'9800X3D':50000,'5600X':12000,'5600':10000},
   ram:{'DDR4 16GB':8000,'DDR4 32GB':12000,'DDR5 16GB':10000,'DDR5 32GB':15000,'DDR5 64GB':25000},
   ssd:{'512GB':7000,'1TB':10000,'2TB':15000},
   cas:{'新品ケース★':10000,'白ケース':7000,'黒ケース':4000,'ブラックのケース':4000,'新品ケース':7000,'CX200M':7000,'T4 PLUS':4000,'T4':4000,'H17':3500,'PIRAWH':8000,'DS900WH':10000,'DS900BK':10000,'CXWH':7000,'湾曲ピーラーレスガラスケース':10000},
@@ -423,12 +447,188 @@ const DEFAULT_OPT={
 };
 const DEFAULT_FIXED={keyboard:1500,mouse:1000,monitor:3000,monitor144hz:8000};
 
+// ================================================================
+// ★ LAYER 1: Option Alias Table (表記揺れ吸収)
+// ================================================================
+const DEFAULT_ALIASES={
+  // --- Cooling variations ---
+  '水冷クーラー黒':'簡易水冷',
+  '水冷クーラー白':'簡易水冷',
+  '水冷クーラー':'簡易水冷',
+  '簡易水冷クーラー':'簡易水冷',
+  'AIO':'簡易水冷',
+  'aio':'簡易水冷',
+  '液晶水冷クーラー':'液晶簡易水冷',
+  '液晶水冷':'液晶簡易水冷',
+  'LCD水冷':'液晶簡易水冷',
+  '空冷クーラー':'120mm空冷クーラー',
+  '120mmクーラー':'120mm空冷クーラー',
+  '120mm空冷':'120mm空冷クーラー',
+  'CPUクーラー':'120mm空冷クーラー',
+  'サイドフロークーラー':'120mm空冷クーラー',
+  'トップフロークーラー':'120mm空冷クーラー',
+  // --- WiFi variations ---
+  '無線LAN':'内蔵WiFi',
+  'Wi-Fi':'内蔵WiFi',
+  'wifi':'内蔵WiFi',
+  'WiFi':'内蔵WiFi',
+  'WIFI':'内蔵WiFi',
+  'ワイファイ':'内蔵WiFi',
+  // --- Bluetooth variations ---
+  'ブルートゥース':'内蔵Bluetooth',
+  'bluetooth':'内蔵Bluetooth',
+  'Bluetooth':'内蔵Bluetooth',
+  'BT':'内蔵Bluetooth',
+};
+
+// Combo patterns: input patterns that should expand to multiple items
+const DEFAULT_COMBOS=[
+  {pattern:/wifi[\s\-\+&＆・、,]*bluetooth|bluetooth[\s\-\+&＆・、,]*wifi|Wi[\s\-]?Fi[\s\-\+&＆・、,]*Bluetooth|wifi[\s\-\+&＆・、,]*BT/i, result:['内蔵WiFi','内蔵Bluetooth']},
+  {pattern:/無線LAN[\s\-\+&＆・、,]*Bluetooth|無線LAN[\s\-\+&＆・、,]*BT/i, result:['内蔵WiFi','内蔵Bluetooth']},
+  {pattern:/USB\s*WiFi[\s\-\+&＆・、,]*USB\s*Bluetooth/i, result:['USB WiFi','USB Bluetooth']},
+];
+
 let optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));
 let fixedPrices={...DEFAULT_FIXED};
-
 let gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));
+let optionAliases={...DEFAULT_ALIASES};
 let sales=[];
 let csvH=[],csvR=[],curFile=null;
+
+// ================================================================
+// ★ LAYER 3: Levenshtein Distance (ファジーマッチ用)
+// ================================================================
+function levenshtein(a,b){
+  a=a.toLowerCase();b=b.toLowerCase();
+  const m=a.length,n=b.length;
+  if(!m)return n;if(!n)return m;
+  const d=Array.from({length:m+1},(_,i)=>i);
+  for(let j=1;j<=n;j++){
+    let prev=d[0];d[0]=j;
+    for(let i=1;i<=m;i++){
+      const tmp=d[i];
+      d[i]=a[i-1]===b[j-1]?prev:Math.min(prev,d[i],d[i-1])+1;
+      prev=tmp;
+    }
+  }
+  return d[m];
+}
+
+// Find fuzzy suggestions from all option/part tables
+function findFuzzySuggestions(name,cat,maxResults=3){
+  const candidates=[];
+  // For GPU, strip GeForce/Radeon prefix for better matching
+  const cleanName=cat==='gpu'?name.replace(/geforce\s*/i,'').replace(/radeon\s*/i,'').trim():name;
+  const n=cleanName.toLowerCase();
+
+  // Search in the relevant category table
+  const tables={
+    option:optPrices.other||{},
+    cpu:optPrices.cpu||{},
+    ram:optPrices.ram||{},
+    ssd:optPrices.ssd||{},
+    cas:optPrices.cas||{},
+    gpu:gpuTable
+  };
+
+  const searchIn=tables[cat]||{};
+  for(const k of Object.keys(searchIn)){
+    const dist=levenshtein(cleanName,k);
+    const maxLen=Math.max(cleanName.length,k.length);
+    const similarity=1-dist/maxLen;
+    const contains=n.includes(k.toLowerCase())||k.toLowerCase().includes(n);
+    if(similarity>0.35||contains){
+      // For GPU: show the gpu component cost from the table entry
+      const gpuCost=cat==='gpu'&&searchIn[k]?searchIn[k].gpu:null;
+      candidates.push({name:k,dist,similarity,contains,price:cat==='gpu'?gpuCost:searchIn[k]});
+    }
+  }
+
+  // For option category, also suggest alias targets
+  if(cat==='option'){
+    const aliasTargets=new Set(Object.values(optionAliases));
+    for(const t of aliasTargets){
+      if(searchIn[t]!=null)continue; // Already in candidates
+      const dist=levenshtein(cleanName,t);
+      const maxLen=Math.max(cleanName.length,t.length);
+      const similarity=1-dist/maxLen;
+      const contains=n.includes(t.toLowerCase())||t.toLowerCase().includes(n);
+      if(similarity>0.35||contains){
+        candidates.push({name:t,dist,similarity,contains,price:searchIn[t]});
+      }
+    }
+  }
+
+  // Sort: exact contains first, then by similarity
+  candidates.sort((a,b)=>{
+    if(a.contains&&!b.contains)return -1;
+    if(!a.contains&&b.contains)return 1;
+    return b.similarity-a.similarity;
+  });
+
+  return candidates.slice(0,maxResults);
+}
+
+// ================================================================
+// Alias Table UI
+// ================================================================
+function renderAliasTable(){
+  let html='';
+  const entries=Object.entries(optionAliases);
+  entries.sort((a,b)=>a[0].localeCompare(b[0],'ja'));
+  for(const[from,to]of entries){
+    html+=`<tr><td style="font-size:12px">${esc(from)}</td>`;
+    html+=`<td style="font-size:12px;color:#2a5aa0;font-weight:600">→ ${esc(to)}</td>`;
+    html+=`<td><button onclick="delete optionAliases[${JSON.stringify(from)}];renderAliasTable()" style="border:none;color:#c44;cursor:pointer;font-size:14px;background:none">×</button></td></tr>`;
+  }
+  $('aliasTbody').innerHTML=html;
+}
+function addAlias(){
+  const from=$('newAliasFrom').value.trim();
+  const to=$('newAliasTo').value.trim();
+  if(!from||!to){alert('パターンと変換先の両方を入力');return}
+  optionAliases[from]=to;
+  $('newAliasFrom').value='';$('newAliasTo').value='';
+  renderAliasTable();
+}
+function resetAliases(){
+  if(!confirm('エイリアスをデフォルトに戻しますか？'))return;
+  optionAliases={...DEFAULT_ALIASES};
+  renderAliasTable();
+}
+
+// ================================================================
+// ★ LAYER 1: Normalize option string using aliases + combos
+// ================================================================
+function normalizeOptionStr(optionStr){
+  if(!optionStr)return '';
+
+  // Strip trailing noise: 「に変更」「変更」「搭載」「付き」「(+XXXX円)」
+  let s=optionStr.trim()
+    .replace(/[\(（][+＋]?\s*\d[\d,]*\s*円?\s*[\)）]/g,'')  // (+10000円) etc
+    .replace(/に変更\s*$/,'')
+    .replace(/変更\s*$/,'')
+    .replace(/搭載\s*$/,'')
+    .replace(/付き\s*$/,'')
+    .trim();
+
+  // Check combo patterns first (wifi-Bluetooth → two items)
+  for(const combo of DEFAULT_COMBOS){
+    if(combo.pattern.test(s)){
+      return combo.result.join(',');
+    }
+  }
+
+  // Check alias table (longest match first for safety)
+  const aliasKeys=Object.keys(optionAliases).sort((a,b)=>b.length-a.length);
+  for(const ak of aliasKeys){
+    if(s.toLowerCase().includes(ak.toLowerCase())){
+      return optionAliases[ak];
+    }
+  }
+
+  return s;
+}
 
 // ================================================================
 // GPU Table UI
@@ -454,7 +654,7 @@ function addGpuRow(){
 }
 
 // ================================================================
-// Parts Sub-table UI (CPU/RAM/SSD/Option)
+// Parts Sub-table UI
 // ================================================================
 function renderPartTable(cat,tbodyId){
   const data=optPrices[cat]||{};
@@ -486,12 +686,13 @@ function renderAllPartTables(){
 }
 
 // ================================================================
-// Save/Load All Tables
+// Save/Load All Tables (now includes aliases)
 // ================================================================
 function saveAllTables(){
   localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));
   localStorage.setItem(LS_OPT,JSON.stringify(optPrices));
   localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));
+  localStorage.setItem(LS_ALIAS,JSON.stringify(optionAliases));
   alert('全テーブル保存完了');
 }
 function loadAllTables(){
@@ -499,6 +700,18 @@ function loadAllTables(){
   try{const o=JSON.parse(localStorage.getItem(LS_OPT));if(o)optPrices=o}catch{}
   ensureSubTables();
   try{const f=JSON.parse(localStorage.getItem('titan_fixed_v2'));if(f){fixedPrices=f;$('fixKb').value=f.keyboard||1500;$('fixMouse').value=f.mouse||1000;$('fixMon').value=f.monitor||3000;$('fixMon144').value=f.monitor144hz||8000}}catch{}
+  try{const a=JSON.parse(localStorage.getItem(LS_ALIAS));if(a)optionAliases=a}catch{}
+  // Migrate: normalize old GPU keys (strip GeForce/Radeon prefix)
+  migrateGpuKeys();
+}
+function migrateGpuKeys(){
+  let changed=false;
+  const newTable={};
+  for(const [k,v] of Object.entries(gpuTable)){
+    const clean=k.replace(/geforce\s*/i,'').replace(/radeon\s*/i,'').trim().replace(/\s+/g,'');
+    if(clean!==k){changed=true;newTable[clean]=v}else{newTable[k]=v}
+  }
+  if(changed){gpuTable=newTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable))}
 }
 
 // ================================================================
@@ -506,30 +719,60 @@ function loadAllTables(){
 // ================================================================
 function matchGpu(gpuName){
   if(!gpuName)return null;
-  const n=gpuName.toUpperCase().replace(/\s+/g,'').replace(/GEFORCE/i,'').replace(/RADEON/i,'').trim();
-  // Sort by key length descending to match longest first (RTX4060Ti before RTX4060)
+  const strip=s=>s.toUpperCase().replace(/\s+/g,'').replace(/GEFORCE/g,'').replace(/RADEON/g,'').trim();
+  const n=strip(gpuName);
   const keys=Object.keys(gpuTable).sort((a,b)=>b.length-a.length);
+  const gpuSuffixes=['TI','XT'];
   for(const k of keys){
-    if(n.includes(k.toUpperCase().replace(/\s+/g,'')))return k;
+    const kn=strip(k);
+    const idx=n.indexOf(kn);
+    if(idx!==-1){
+      const rest=n.substring(idx+kn.length);
+      const hasSuffix=gpuSuffixes.some(s=>rest.startsWith(s)&&(rest.length===s.length||!/[A-Z0-9]/.test(rest[s.length]||'')));
+      if(!hasSuffix)return k;
+    }
   }
   return null;
 }
 
 // ================================================================
-// Option cost calculation (with missing detection)
+// ★ LAYER 1+3: Option cost calculation (with alias normalization + fuzzy)
 // ================================================================
 function calcOptionCost(optionStr){
   if(!optionStr)return {cost:0,miss:[]};
   let total=0;const miss=[];
-  const items=optionStr.split(/[,、，]/);
-  for(let item of items){
-    item=item.trim();if(!item)continue;
+
+  // Split by common delimiters
+  const rawItems=optionStr.split(/[,、，]/);
+  // Expand: each raw item may normalize into multiple items (combos)
+  const items=[];
+  for(let raw of rawItems){
+    raw=raw.trim();if(!raw)continue;
+    const normalized=normalizeOptionStr(raw);
+    if(!normalized)continue;
+    // Normalized result may itself be comma-separated (from combos)
+    normalized.split(',').forEach(n=>{if(n.trim())items.push(n.trim())});
+  }
+
+  // Deduplicate
+  const seen=new Set();
+  const uniqueItems=[];
+  for(const item of items){
+    const k=item.toLowerCase();
+    if(!seen.has(k)){seen.add(k);uniqueItems.push(item)}
+  }
+
+  for(const item of uniqueItems){
     let found=false;
     const sortedKeys=Object.keys(optPrices.other||{}).sort((a,b)=>b.length-a.length);
     for(const k of sortedKeys){
       if(item.toLowerCase().includes(k.toLowerCase())){total+=optPrices.other[k];found=true;break}
     }
-    if(!found)miss.push({cat:'option',name:item,note:'オプションテーブルに未登録'});
+    if(!found){
+      // ★ LAYER 3: Try fuzzy suggestions
+      const suggestions=findFuzzySuggestions(item,'option');
+      miss.push({cat:'option',name:item,note:'オプションテーブルに未登録',originalRaw:optionStr,suggestions});
+    }
   }
   return {cost:total,miss};
 }
@@ -572,6 +815,19 @@ function getSsdCost(ssdStr,baseCost){
 // ================================================================
 // Full cost calculation for a sale
 // ================================================================
+// Detect non-PC items (accessories, options sold separately)
+function isNonPCItem(name,parts){
+  if(parts&&parts.gpu)return false; // Has GPU = likely a PC
+  const n=(name||'').toLowerCase();
+  // Accessory keywords
+  const accKw=['オプション','コントローラー','リモコン','ケーブル','水冷クーラー','空冷クーラー','rgb','ssdオプション','専用出品'];
+  if(accKw.some(k=>n.includes(k)))return true;
+  // No GPU-related keyword at all in title
+  const pcKw=['ゲーミングpc','gaming','rtx','gtx','rx','gpu','デスクトップ','パソコン','pc'];
+  if(!pcKw.some(k=>n.includes(k)))return true;
+  return false;
+}
+
 function calcCosts(parts,gpuKey){
   const base=gpuKey?gpuTable[gpuKey]:null;
   const costs={};
@@ -582,19 +838,27 @@ function calcCosts(parts,gpuKey){
 
     const cpuR=getCpuCost(parts.cpu,base.cpu);
     costs.cpu=cpuR.cost;
-    if(!cpuR.matched&&parts.cpu)missing.push({cat:'cpu',name:parts.cpu,note:'CPUテーブルに未登録'});
+    if(!cpuR.matched&&parts.cpu){
+      const suggestions=findFuzzySuggestions(parts.cpu,'cpu');
+      missing.push({cat:'cpu',name:parts.cpu,note:'CPUテーブルに未登録',suggestions});
+    }
 
     costs.mb=base.mb;
 
     const ramR=getRamCost(parts.ram,base.ram);
     costs.ram=ramR.cost;
-    if(!ramR.matched&&parts.ram)missing.push({cat:'ram',name:parts.ram,note:'RAMテーブルに未登録'});
+    if(!ramR.matched&&parts.ram){
+      const suggestions=findFuzzySuggestions(parts.ram,'ram');
+      missing.push({cat:'ram',name:parts.ram,note:'RAMテーブルに未登録',suggestions});
+    }
 
     const ssdR=getSsdCost(parts.ssd,base.ssd);
     costs.ssd=ssdR.cost;
-    if(!ssdR.matched&&parts.ssd)missing.push({cat:'ssd',name:parts.ssd,note:'SSDテーブルに未登録'});
+    if(!ssdR.matched&&parts.ssd){
+      const suggestions=findFuzzySuggestions(parts.ssd,'ssd');
+      missing.push({cat:'ssd',name:parts.ssd,note:'SSDテーブルに未登録',suggestions});
+    }
 
-    // Case: if GPT returned a case name, look up in case table
     if(parts.case_name){
       const casTable=optPrices.cas||{};
       const casKeys=Object.keys(casTable).sort((a,b)=>b.length-a.length);
@@ -602,21 +866,30 @@ function calcCosts(parts,gpuKey){
       for(const k of casKeys){
         if(parts.case_name.toLowerCase().includes(k.toLowerCase())){costs.cas=casTable[k];casMatched=true;break}
       }
-      if(!casMatched){costs.cas=base.cas;missing.push({cat:'cas',name:parts.case_name,note:'ケーステーブルに未登録'})}
+      if(!casMatched){
+        costs.cas=base.cas;
+        const suggestions=findFuzzySuggestions(parts.case_name,'cas');
+        missing.push({cat:'cas',name:parts.case_name,note:'ケーステーブルに未登録',suggestions});
+      }
     }else{costs.cas=base.cas}
 
     costs.psu=base.psu;
     costs.cool=base.cool;
   } else {
-    costs.gpu=0;costs.cpu=0;costs.mb=4000;costs.ram=8000;costs.ssd=7000;costs.cas=7000;costs.psu=0;costs.cool=300;
-    if(parts.gpu)missing.push({cat:'gpu',name:parts.gpu,note:'GPUテーブルに未登録'});
+    // No GPU match — check if this is a non-PC item
+    costs.gpu=0;costs.cpu=0;costs.mb=0;costs.ram=0;costs.ssd=0;costs.cas=0;costs.psu=0;costs.cool=0;
+    if(parts.gpu){
+      // Has a GPU name but not in table — it's a PC, use defaults
+      costs.mb=4000;costs.ram=8000;costs.ssd=7000;costs.cas=7000;costs.cool=300;
+      const suggestions=findFuzzySuggestions(parts.gpu,'gpu');
+      missing.push({cat:'gpu',name:parts.gpu,note:'GPUテーブルに未登録',suggestions});
+    }
   }
 
   const optR=calcOptionCost(parts.option);
   costs.option=optR.cost;
   missing.push(...optR.miss);
 
-  // Peripherals
   if(parts.monitor){
     const mon=parts.monitor.toUpperCase();
     costs.monitor=(mon.includes('144')||mon.includes('165')||mon.includes('240'))?fixedPrices.monitor144hz:fixedPrices.monitor;
@@ -641,7 +914,6 @@ function calcTax(salePrice,costTotal,feeAmt,shipping){
     const outputTax=Math.floor(salePrice/1.1*0.1);
     return Math.floor(outputTax*(1-rate/100));
   }
-  // standard
   const outputTax=Math.floor(salePrice/1.1*0.1);
   const inputRate=(parseInt($('taxInputRate').value)||100)/100;
   const inputTax=Math.floor((costTotal+feeAmt+shipping)/1.1*0.1*inputRate);
@@ -678,19 +950,19 @@ function taxModeChange(){
 }
 
 // ================================================================
-// Storage
+// Storage (now includes aliases)
 // ================================================================
 function saveS(){localStorage.setItem(LS_SALES,JSON.stringify(sales))}
 function loadS(){try{sales=JSON.parse(localStorage.getItem(LS_SALES))||[]}catch{sales=[]}}
-function clearAll(){sales=[];saveS();localStorage.removeItem(LS_GPU);localStorage.removeItem(LS_OPT);localStorage.removeItem('titan_fixed_v2');gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));fixedPrices={...DEFAULT_FIXED};renderGpuTable();renderAllPartTables();$('fixKb').value=1500;$('fixMouse').value=1000;$('fixMon').value=3000;$('fixMon144').value=8000;renderSales();$('b1').textContent=0;$('b2').textContent=0}
+function clearAll(){sales=[];saveS();localStorage.removeItem(LS_GPU);localStorage.removeItem(LS_OPT);localStorage.removeItem('titan_fixed_v2');localStorage.removeItem(LS_ALIAS);gpuTable=JSON.parse(JSON.stringify(DEFAULT_GPU_TABLE));optPrices=JSON.parse(JSON.stringify(DEFAULT_OPT));fixedPrices={...DEFAULT_FIXED};optionAliases={...DEFAULT_ALIASES};renderGpuTable();renderAllPartTables();renderAliasTable();$('fixKb').value=1500;$('fixMouse').value=1000;$('fixMon').value=3000;$('fixMon144').value=8000;renderSales();$('b1').textContent=0;$('b2').textContent=0}
 function clearSales(){sales=[];saveS();renderSales();$('b1').textContent=0;$('b2').textContent=0}
 function exportJSON(){
-  const d={type:'full',gpuTable,optPrices,fixedPrices,sales,settings:JSON.parse(localStorage.getItem(LS_CFG)||'{}'),exported:new Date().toISOString()};
+  const d={type:'full',gpuTable,optPrices,fixedPrices,optionAliases,sales,settings:JSON.parse(localStorage.getItem(LS_CFG)||'{}'),exported:new Date().toISOString()};
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_full_${new Date().toISOString().slice(0,10)}.json`;a.click();
 }
 function exportTables(){
-  const d={type:'tables',gpuTable,optPrices,fixedPrices,exported:new Date().toISOString()};
+  const d={type:'tables',gpuTable,optPrices,fixedPrices,optionAliases,exported:new Date().toISOString()};
   const b=new Blob([JSON.stringify(d,null,2)],{type:'application/json'});
   const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`titan_tables_${new Date().toISOString().slice(0,10)}.json`;a.click();
 }
@@ -703,6 +975,7 @@ function importTables(e){
     if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
     if(d.optPrices){optPrices=d.optPrices;ensureSubTables();localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
     if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
+    if(d.optionAliases){optionAliases=d.optionAliases;localStorage.setItem(LS_ALIAS,JSON.stringify(optionAliases));renderAliasTable()}
     alert('テーブル読込完了');}catch(e){alert('エラー: '+e.message)}};
   r.readAsText(f);e.target.value='';
 }
@@ -712,6 +985,7 @@ function importJSON(e){
     if(d.gpuTable){gpuTable=d.gpuTable;localStorage.setItem(LS_GPU,JSON.stringify(gpuTable));renderGpuTable()}
     if(d.optPrices){optPrices=d.optPrices;ensureSubTables();localStorage.setItem(LS_OPT,JSON.stringify(optPrices));renderAllPartTables()}
     if(d.fixedPrices){fixedPrices=d.fixedPrices;localStorage.setItem('titan_fixed_v2',JSON.stringify(fixedPrices));$('fixKb').value=fixedPrices.keyboard||1500;$('fixMouse').value=fixedPrices.mouse||1000;$('fixMon').value=fixedPrices.monitor||3000;$('fixMon144').value=fixedPrices.monitor144hz||8000}
+    if(d.optionAliases){optionAliases=d.optionAliases;localStorage.setItem(LS_ALIAS,JSON.stringify(optionAliases));renderAliasTable()}
     if(d.sales){sales=d.sales;saveS()}
     if(d.settings){localStorage.setItem(LS_CFG,JSON.stringify(d.settings));loadSettings()}
     renderSales();alert('読込完了');}catch(e){alert('エラー: '+e.message)}};
@@ -778,7 +1052,7 @@ function setupCSV(){
 }
 
 // ================================================================
-// OpenAI API
+// ★ LAYER 2: Enhanced GPT Prompt
 // ================================================================
 async function testAPI(){
   const key=$('apiKey').value.trim();const model=$('mdl').value;const el=$('apiTestResult');
@@ -802,6 +1076,7 @@ async function callGPT(name,desc,key,model){
 
   const gpuKeys=Object.keys(gpuTable).join(', ');
 
+  // ★ LAYER 2: Enhanced prompt with comprehensive normalization rules
   const prompt=`以下のメルカリPC出品を解析してJSONで返せ。
 
 商品名: ${name||'不明'}
@@ -809,29 +1084,59 @@ async function callGPT(name,desc,key,model){
 ${cleanDesc.substring(0,1500)}
 
 【重要ルール】
-1. 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、そちらが最優先。
-   例:「Ryzen 7 5700X に変更」→ cpuは"Ryzen 7 5700X"
-   例:「SSD 1TB に変更」→ ssdは"1TB"
-   例:「メモリ DDR4 32GB」→ ramは"DDR4 32GB"
-2. 「〜抜き」は除外（キーボード抜き→keyboard=null、モニター抜き→monitor=null）
+1. 説明文の先頭（☆★☆の前）にオプション変更が書いてある場合、そちらが最優先。後半の【詳細スペック】よりも冒頭のオプション指定を優先せよ。
+   ★ スペースなしのコンパクト表記にも対応すること:
+   「5700x」「5700X」→ cpu="Ryzen 7 5700X"
+   「3700x」「3700X」→ cpu="Ryzen 7 3700X"
+   「7700」→ cpu="Ryzen 7 7700"
+   「ssd2tb」「SSD2TB」→ ssd="2TB"
+   「ssd1tb」「SSD1TB」→ ssd="1TB"
+   「32gb」「メモリ32gb」「メモリ32GB」「メモリー32GB」→ ram="DDR4 32GB"
+   「ケース黒」→ case_name="黒ケース"（※optionではなくcase_nameに入れる）
+   「ケース白」→ case_name="白ケース"
+   「モニターキーボードマウスなし」「モニターキーボードマウス無し」→ monitor=null, keyboard=null
+   「モニターとキーボードマウス無し」「モニタ無し」→ monitor=null
+   「キーボードマウスなし」「キーボードマウス無し」→ keyboard=null
+   ★ 例: 冒頭が以下の場合:
+     ケース黒
+     5700x
+     ssd2tb
+     水冷クーラー黒
+     wifi-Bluetooth
+     モニターキーボードマウスなし
+     165000円
+     → cpu="Ryzen 7 5700X", ssd="2TB", case_name="黒ケース", option="簡易水冷,内蔵WiFi,内蔵Bluetooth", monitor=null, keyboard=null
+   ★ 価格行（165000円等）は無視すること
+2. 「〜抜き」「〜なし」「〜無し」は除外（キーボード抜き→keyboard=null、モニター抜き→monitor=null）
 3. 「単品」=本体のみ（monitor,keyboardともにnull）
 4. 「CPU無し」→ cpu=null
-5. gpu_keyは以下のいずれかに正規化: ${gpuKeys}
-6. ramは必ず「DDR4 16GB」「DDR4 32GB」「DDR5 16GB」「DDR5 32GB」「DDR5 64GB」のいずれかで返す。DDR記載なく16GBのみなら「DDR4 16GB」とする
-7. optionの正規化ルール:
-   - 水冷/簡易水冷→「簡易水冷」、液晶水冷/液晶簡易水冷→「液晶簡易水冷」
-   - WiFi/内蔵Wi-Fi/WiFi内蔵→「内蔵WiFi」、USB WiFi→「USB WiFi」
-   - Bluetooth/内蔵bluetooth→「内蔵Bluetooth」、USB Bluetooth→「USB Bluetooth」
-   - 120mm空冷クーラー→「120mm空冷クーラー」（optionに含める）
-   - カンマ区切りで複数
+5. gpu_keyはGPU型番の短縮形で返す（例: RTX3080, GTX1080Ti, RX7800XT）。以下のテーブルに存在するものはその表記に合わせる: ${gpuKeys}
+   ★ テーブルに無いGPUの場合でも正しい型番をそのまま返せ（例: RTX3070Ti, RTX4070, RX5700XT等）。絶対に別のGPUに変換するな。
+6. ramは必ず「DDR4 16GB」「DDR4 32GB」「DDR5 16GB」「DDR5 32GB」「DDR5 64GB」のいずれかで返す。DDR記載なく16GBのみなら「DDR4 16GB」とする。「メモリ32GB」「32gb」など容量だけの記載はDDR4とみなす。
+7. optionの正規化ルール（★表記揺れに注意！以下すべてのバリエーションを正規化すること）:
+   ■ 水冷系:
+     「水冷クーラー」「水冷クーラー黒」「水冷クーラー白」「簡易水冷クーラー」「AIO」→「簡易水冷」
+     「液晶水冷クーラー」「液晶水冷」「LCD水冷」→「液晶簡易水冷」
+   ■ 空冷系:
+     「空冷クーラー」「120mmクーラー」「120mm空冷」「CPUクーラー」→「120mm空冷クーラー」
+     ※「〜に変更」「〜変更」の末尾は無視して正規化
+   ■ WiFi系:
+     「wifi」「Wi-Fi」「WiFi」「無線LAN」「ワイファイ」→「内蔵WiFi」
+     「USB WiFi」「USBワイファイ」→「USB WiFi」
+   ■ Bluetooth系:
+     「Bluetooth」「bluetooth」「BT」「ブルートゥース」→「内蔵Bluetooth」
+     「USB Bluetooth」→「USB Bluetooth」
+   ■ WiFi+Bluetooth複合:
+     「wifi-Bluetooth」「Wi-Fi、Bluetooth」「wifi＆bluetooth搭載」「WiFi・Bluetoothボード」「wifi Bluetooth」「Wi-Fi&Bluetooth搭載」「wifi＆Bluetooth搭載」→「内蔵WiFi,内蔵Bluetooth」（カンマ区切りで2つ）
+   ■ カンマ区切りで複数
+   ■ 価格表記「(+10000円)」「(+3000)」等は無視（含めない）
 8. monitorの判定:
    - モニター付き→"フルHDモニター"
-   - 144hzモニター付き→"144hzモニター"（144hz/165hz/240hzの場合）
-   - モニター抜き or 単品→null
+   - 144hzモニター/144Hzモニタ/165hz/240hz付き→"144hzモニター"
+   - モニター抜き/モニター無し/モニタ無し/単品→null
 9. keyboardの判定:
    - キーボード・マウス付き→"セット"
-   - キーボード抜き or マウス抜き or 単品→null
-   - 「キーボード・マウス・マウスパッド抜き」→null
+   - キーボード抜き/マウス抜き/単品/キーボードマウスなし/キーボードマウス無し→null
    - モニターだけ付きの場合→keyboard=null
 10. case_nameの判定ルール（以下の優先順位で判定）:
    - 説明文に具体的なケース名（CX200M,T4,H17,DS900WH,DS900BK,PIRAWH,CXWH等）があればそれを返す
@@ -839,7 +1144,8 @@ ${cleanDesc.substring(0,1500)}
    - タイトルが「【即納激安ホワイトモデル】」→ "白ケース"
    - タイトルが「【即納激安ブラックモデル】」→ "黒ケース"
    - タイトルが「新品ケースゲーミングPC」（★なし）→ "新品ケース"
-   - オプションに「ホワイトケース」「ブラックのケース」等あればそちらを優先
+   - オプション先頭に「ケース黒」→ "黒ケース"
+   - オプション先頭に「ケース白」→ "白ケース"
    - 上記いずれにも該当しない場合 → null
 
 JSON形式（不明はnull）:
@@ -853,7 +1159,7 @@ JSON形式（不明はnull）:
   "monitor":"フルHDモニター",
   "keyboard":"セット",
   "case_name":null,
-  "option":"簡易水冷,内蔵WiFi",
+  "option":"簡易水冷,内蔵WiFi,内蔵Bluetooth",
   "is_fullset":true,
   "condition":"リファービッシュ"
 }
@@ -878,13 +1184,13 @@ JSONのみ返せ。`;
 }
 
 // ================================================================
-// Single item processing (shared by URL fetch & manual add)
+// Single item processing
 // ================================================================
 async function processSingleItem(name,desc,price,date){
   const key=$('apiKey').value.trim();
   if(!key){alert('APIキーを入力してください');return null}
   const model=$('mdl').value;
-  const feeRate=parseInt($('feeRate').value)||10;
+  const feeRate=(parseFloat($('feeRate').value)||10)/100;
   const defShip=parseInt($('defShip').value)||1500;
 
   let parts=null,parseError='';
@@ -900,7 +1206,8 @@ async function processSingleItem(name,desc,price,date){
   const sale={
     id:Date.now(),product_name:name,description:desc,sale_price:price,date:date||'',
     parts:parts||{},gpuKey,costs,missing,
-    shipping:defShip,fee_rate:feeRate,parseError
+    shipping:defShip,fee_rate:feeRate,parseError,
+    isNonPC:isNonPCItem(name,parts)
   };
   sales.push(sale);saveS();
   renderMissing();renderSales();
@@ -967,7 +1274,6 @@ async function startAI(){
     let parts=null;lastAPIError='';
     try{if(nm||ds)parts=await callGPT(nm,ds,key,model)}catch(e){lastAPIError=e.message}
 
-    // Match GPU and calculate costs
     let gpuKey=null;
     let costs={};
     let missing=[];
@@ -983,7 +1289,8 @@ async function startAI(){
       id:Date.now()+i,product_name:nm,description:ds,sale_price:pr,date:dt,
       parts:parts||{},gpuKey,costs,missing,
       shipping:defShip,fee_rate:feeRate,
-      parseError:(!parts&&lastAPIError)?lastAPIError:''
+      parseError:(!parts&&lastAPIError)?lastAPIError:'',
+      isNonPC:isNonPCItem(nm,parts)
     });
     if(i<targetRows.length-1)await new Promise(r=>setTimeout(r,400));
   }
@@ -1003,7 +1310,6 @@ async function startAI(){
     $('aiSt').innerHTML+=`<div class="al al-e mt8"><h4>エラー詳細</h4><p>${esc(fe.parseError)}</p></div>`;
   }
 
-  // Result list
   let html='';
   newSales.forEach(s=>{
     const gpu=s.parts?.gpu||'—';const cpu=s.parts?.cpu||'—';
@@ -1021,16 +1327,19 @@ async function startAI(){
 }
 
 // ================================================================
-// Missing Parts
+// ★ LAYER 3: Missing Parts (with fuzzy match suggestions)
 // ================================================================
 let pendingMissing=[];
 function renderMissing(){
-  // Collect all unique missing parts across all sales
   const allMiss=[];
   const seen=new Set();
   sales.forEach(s=>{
     (s.missing||[]).forEach(m=>{
-      const key=m.cat+':'+m.name;
+      // Normalize key to prevent near-duplicate entries
+      let normName=m.name.toLowerCase().replace(/\s+/g,'').replace(/ryzen[579]?/i,'').replace(/corei\d/i,'').trim();
+      // For GPU: also strip GeForce/Radeon prefix
+      if(m.cat==='gpu')normName=normName.replace(/geforce/i,'').replace(/radeon/i,'').trim();
+      const key=m.cat+':'+normName;
       if(!seen.has(key)){seen.add(key);allMiss.push({...m,key})}
     });
   });
@@ -1039,16 +1348,45 @@ function renderMissing(){
   if(!allMiss.length){$('missWrap').innerHTML='<div class="al al-s"><h4>未登録パーツなし — すべてテーブルにマッチ済み</h4></div>';return}
 
   const catLabels={gpu:'GPU',cpu:'CPU',ram:'RAM',ssd:'SSD',cas:'ケース',option:'オプション'};
-  let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「適用して売上へ」を押してください</p></div>';
+  let html='<div class="al al-w"><h4>以下のパーツがテーブルに未登録です</h4><p>原価を入力して「適用して売上へ」を押してください。候補をクリックすると既存テーブルの値を自動入力できます。</p></div>';
+
   allMiss.forEach((m,i)=>{
+    // Recalculate fuzzy suggestions fresh
+    const suggestions=findFuzzySuggestions(m.name,m.cat);
+    const hasSuggestions=suggestions.length>0;
+
     html+=`<div class="cd" style="padding:14px 20px">
       <div class="row fx-c">
-        <div style="flex:2"><span class="tag tag-m">${catLabels[m.cat]||m.cat}</span> <strong>${esc(m.name)}</strong> <span style="font-size:11px;color:#888">${esc(m.note||'')}</span></div>
-        <div style="flex:1"><label>原価 ¥</label><input type="number" id="missP_${i}" placeholder="原価を入力" style="font-size:14px;padding:8px"></div>
+        <div style="flex:2">
+          <span class="tag tag-m">${catLabels[m.cat]||m.cat}</span>
+          <strong>${esc(m.name)}</strong>
+          <span style="font-size:11px;color:#888">${esc(m.note||'')}</span>
+          ${hasSuggestions?`<div class="fuzzy-suggest">💡 もしかして: ${suggestions.map(s=>{
+            const priceStr=s.price!=null?` (¥${s.price.toLocaleString()})`:' (GPU)';
+            const safeName=s.name.replace(/'/g,"\\'").replace(/"/g,'&quot;');
+            return `<span onclick="applySuggestion(${i},'${safeName}',${s.price||0})" title="クリックで自動入力">${esc(s.name)}${priceStr}</span>`;
+          }).join('')}</div>`:''}
+        </div>
+        <div style="flex:1">
+          <label>原価 ¥</label>
+          <input type="number" id="missP_${i}" placeholder="原価を入力" style="font-size:14px;padding:8px">
+          <div id="missSugLabel_${i}" style="font-size:10px;color:#2a5aa0;margin-top:2px"></div>
+        </div>
       </div>
     </div>`;
   });
   $('missWrap').innerHTML=html;
+}
+
+// Auto-fill from fuzzy suggestion click
+function applySuggestion(idx,name,price){
+  const el=$('missP_'+idx);
+  if(el){
+    el.value=price;
+    el.style.borderColor='#2a5aa0';
+    const label=$('missSugLabel_'+idx);
+    if(label)label.innerHTML=`← <strong>${esc(name)}</strong> の値を適用`;
+  }
 }
 
 function applyMissing(){
@@ -1056,7 +1394,6 @@ function applyMissing(){
   if(!pendingMissing.length){go(3);return}
   let added=0;
 
-  // Safety init
   if(!optPrices.cpu)optPrices.cpu={};
   if(!optPrices.ram)optPrices.ram={};
   if(!optPrices.ssd)optPrices.ssd={};
@@ -1087,7 +1424,10 @@ function applyMissing(){
       optPrices.other[m.name]=price;
       added++;
     } else if(m.cat==='gpu'){
-      gpuTable[m.name]={gpu:price,cpu:3500,mb:4000,ram:8000,ssd:7000,cas:7000,psu:700,cool:300};
+      // Normalize: "GeForce RTX4070" → "RTX4070", "Radeon RX7800XT" → "RX7800XT"
+      let gpuKey=m.name.replace(/geforce\s*/i,'').replace(/radeon\s*/i,'').trim().replace(/\s+/g,'');
+      if(price===0&&!confirm(gpuKey+' のGPU原価が¥0です。本当に追加しますか？'))return;
+      gpuTable[gpuKey]={gpu:price,cpu:3500,mb:4000,ram:8000,ssd:7000,cas:7000,psu:700,cool:300};
       added++;
     }
   });
@@ -1097,7 +1437,7 @@ function applyMissing(){
     localStorage.setItem(LS_OPT,JSON.stringify(optPrices));
     renderGpuTable();renderAllPartTables();
 
-    // Recalculate all sales
+    // Recalculate all sales with updated tables
     sales.forEach(s=>{
       if(!s.parts||!Object.keys(s.parts).length)return;
       const gpuKey=s.parts.gpu_key?matchGpu(s.parts.gpu_key):matchGpu(s.parts.gpu);
@@ -1105,15 +1445,16 @@ function applyMissing(){
       s.gpuKey=gpuKey;
       s.costs=result.costs;
       s.missing=result.missing;
+      s.isNonPC=isNonPCItem(s.product_name,s.parts);
     });
     saveS();
+    alert(`✅ ${added}件のパーツをテーブルに追加し、全売上を再計算しました。`);
   }
 
   go(3);
   }catch(e){alert('適用エラー: '+e.message);console.error(e)}
 }
 
-// ================================================================
 // ================================================================
 // Inline edit (sales detail)
 // ================================================================
@@ -1149,6 +1490,7 @@ function updateSaleHeader(idx){
   $('s4').textContent='¥'+tt.toLocaleString();
 }
 
+// ================================================================
 // Sales Rendering
 // ================================================================
 function renderSales(){
@@ -1177,7 +1519,7 @@ function renderSales(){
       <div class="sr-h" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
         <div class="sr-nm">
           <div class="sr-nm-t">${esc(s.product_name||'—')}</div>
-          <div class="sr-nm-s">${esc(s.gpuKey||'—')} / ${esc(s.parts?.cpu||'—')} / ${s.parts?.is_fullset?'フルセット':'本体のみ'}</div>
+          <div class="sr-nm-s">${s.isNonPC?'<span class="tag tag-o" style="margin-right:6px">⚠ PC以外</span>':''}${esc(s.gpuKey||'—')} / ${esc(s.parts?.cpu||'—')} / ${s.parts?.is_fullset?'フルセット':'本体のみ'}</div>
         </div>
         <div class="sr-n">
           <div><div class="sr-nl">売値</div><div class="sr-nv">¥${s.sale_price.toLocaleString()}</div></div>
@@ -1208,7 +1550,6 @@ function renderSales(){
     </div>`;
   });
 
-  // Global missing count
   const globalMiss=sales.reduce((s,x)=>(x.missing||[]).length+s,0);
   $('b2').textContent=globalMiss;
   let missHtml=globalMiss>0?`<div class="al al-w mb16"><h4>未登録パーツ ${globalMiss}件</h4><p>不足パーツタブで原価を入力して再計算してください。未登録パーツの原価はベース値のまま計算されています。</p></div>`:'';
@@ -1245,7 +1586,6 @@ function toExcel(){
   const wb=XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb,ws,'売上利益一覧');
 
-  // GPUテーブルシート
   const gt=[['GPU型番','グラボ','CPU','MB','RAM','SSD','ケース','電源','クーラー','合計']];
   for(const[k,v]of Object.entries(gpuTable)){
     const t=v.gpu+v.cpu+v.mb+v.ram+v.ssd+v.cas+v.psu+v.cool;
@@ -1264,12 +1604,12 @@ function toExcel(){
 // ================================================================
 // Init
 // ================================================================
-// Init
 loadAllTables();
 loadS();
 loadSettings();
 renderGpuTable();
 renderAllPartTables();
+renderAliasTable();
 $('b1').textContent=sales.length;
 </script>
 </body>
